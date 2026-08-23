@@ -150,7 +150,7 @@ class BookingService:
     @staticmethod
     def create_notification(db: Session, user_id: str, title: str, message: str, notif_type: str = "booking"):
         notif = Notification(
-            id=f"notif-{int(datetime.utcnow().timestamp() * 1000)}",
+            id=f"notif-{uuid.uuid4().hex[:12]}",
             user_id=user_id,
             title=title,
             message=message,

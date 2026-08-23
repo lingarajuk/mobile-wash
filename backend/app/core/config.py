@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     DB_PORT: int = 3306
     DB_NAME: str = "mobile_wash"
     DB_USER: str = "root"
-    DB_PASSWORD: str = "root"
+    DB_PASSWORD: str = "password"
     
     # JWT Auth
     JWT_SECRET_KEY: str = "aquago_super_secret_jwt_key_2026_change_in_production"

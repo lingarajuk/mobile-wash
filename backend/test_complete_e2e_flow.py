@@ -6,7 +6,7 @@ import urllib.error
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "http://localhost:5000/api/v1"
 
 def api_call(endpoint, method="GET", data=None, token=None):
     url = f"{BASE_URL}{endpoint}"
