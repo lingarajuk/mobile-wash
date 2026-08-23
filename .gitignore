@@ -13,6 +13,18 @@ dist/
 dist-ssr/
 *.local
 
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+
+# Expo
+.expo/
+web-build/
+
 # Python / Backend
 __pycache__/
 *.py[cod]
@@ -38,7 +50,6 @@ share/python-wheels/
 MANIFEST
 
 # Virtual Environments
-.env
 .venv
 env/
 venv/

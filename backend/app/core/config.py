@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     PORT: int = 5000
+    NODE_ENV: str = "production"
     
     # Database
     DATABASE_URL: str = ""
@@ -23,11 +24,21 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440 # 24 hours
     
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:5000,http://127.0.0.1:5000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:5000,http://127.0.0.1:5000,https://aquago.in,https://worker.aquago.in,https://admin.aquago.in,https://api.aquago.in"
+    FRONTEND_URL: str = ""
+    
+    # Cloudinary Cloud Object Storage (optional for production uploads)
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+    CLOUDINARY_URL: str = ""
     
     # Razorpay Payment Gateway Mock/Production credentials
     RAZORPAY_KEY_ID: str = "rzp_test_mockkey123"
     RAZORPAY_KEY_SECRET: str = "rzp_secret_mocksecret456"
+    
+    # Google Maps API
+    GOOGLE_MAPS_API_KEY: str = ""
     
     # Uploads
     UPLOAD_DIRECTORY: str = "backend/uploads"
@@ -46,6 +57,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        if self.FRONTEND_URL:
+            for url in self.FRONTEND_URL.split(","):
+                if url.strip() and url.strip() not in origins:
+                    origins.append(url.strip())
+        return origins
 
 settings = Settings()

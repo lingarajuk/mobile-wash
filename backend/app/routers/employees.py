@@ -410,15 +410,8 @@ async def upload_job_photos(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_employee)
 ):
-    os.makedirs(settings.UPLOAD_DIRECTORY, exist_ok=True)
-    ext = os.path.splitext(file.filename)[1] or ".jpg"
-    filename = f"{booking_id}_{photo_type.lower()}_{uuid.uuid4().hex[:6]}{ext}"
-    filepath = os.path.join(settings.UPLOAD_DIRECTORY, filename)
-
-    with open(filepath, "wb") as buffer:
-        buffer.write(await file.read())
-
-    photo_url = f"/static/uploads/{filename}"
+    from app.services.storage_service import StorageService
+    photo_url = StorageService.upload_image(file, folder=f"aquago/bookings/{booking_id}")
     emp_id = current_user.employee_profile.id if current_user.employee_profile else None
     res = BookingService.add_booking_photo(
         db,

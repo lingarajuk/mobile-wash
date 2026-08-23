@@ -29,20 +29,9 @@ async def upload_general_photo(
     file: UploadFile = File(...),
     photo_type: str = Form("VEHICLE_PHOTO")
 ):
-    """Uploads a vehicle photo before or during booking creation and returns the static URL."""
-    os.makedirs(settings.UPLOAD_DIRECTORY, exist_ok=True)
-    ext = os.path.splitext(file.filename)[1] or ".jpg"
-    unique_name = f"{photo_type.lower()}_{uuid.uuid4().hex[:8]}{ext}"
-    filepath = os.path.join(settings.UPLOAD_DIRECTORY, unique_name)
-
-    content = await file.read()
-    if len(content) > 15 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File too large. Maximum size is 15MB.")
-
-    with open(filepath, "wb") as buffer:
-        buffer.write(content)
-
-    photo_url = f"/static/uploads/{unique_name}"
+    """Uploads a vehicle photo before or during booking creation and returns the cloud/static URL."""
+    from app.services.storage_service import StorageService
+    photo_url = StorageService.upload_image(file, folder="aquago/vehicles")
     return {"success": True, "fileUrl": photo_url, "photoType": photo_type}
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -179,15 +168,8 @@ async def upload_booking_photos_api(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    os.makedirs(settings.UPLOAD_DIRECTORY, exist_ok=True)
-    ext = os.path.splitext(file.filename)[1] or ".jpg"
-    filename = f"{booking_id}_{photo_type.lower()}_{uuid.uuid4().hex[:6]}{ext}"
-    filepath = os.path.join(settings.UPLOAD_DIRECTORY, filename)
-
-    with open(filepath, "wb") as buffer:
-        buffer.write(await file.read())
-
-    photo_url = f"/static/uploads/{filename}"
+    from app.services.storage_service import StorageService
+    photo_url = StorageService.upload_image(file, folder=f"aquago/bookings/{booking_id}")
     emp_id = current_user.employee_profile.id if current_user.employee_profile else None
     res = BookingService.add_booking_photo(
         db,
