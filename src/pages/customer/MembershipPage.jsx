@@ -56,40 +56,40 @@ export const MembershipPage = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-8 pb-16 animate-fadeIn max-w-[1400px] mx-auto">
       <div className="text-center max-w-xl mx-auto space-y-2">
-        <span className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+        <span className="inline-flex items-center gap-1 bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
           <Crown className="w-3.5 h-3.5" /> AquaGo Club Membership
         </span>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Save Up to 40% With Monthly Wash Subscription</h1>
-        <p className="text-xs text-slate-400">Keep your vehicle spotless month after month without booking hassle</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-[#10213F]">Save Up to 40% With Monthly Wash Subscription</h1>
+        <p className="text-xs sm:text-sm text-[#64748B]">Keep your vehicle spotless month after month without booking hassle</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className="glass-card rounded-3xl p-6 border border-slate-800 hover:border-cyan-500/40 flex flex-col justify-between relative overflow-hidden shadow-xl"
+            className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E6ECF5] hover:border-[#BFDBFE] hover:shadow-lg flex flex-col justify-between relative overflow-hidden shadow-xs transition-all"
           >
             {plan.badge && (
-              <span className="absolute top-4 right-4 text-[10px] uppercase font-extrabold bg-cyan-500 text-slate-950 px-2.5 py-0.5 rounded-full">
+              <span className="absolute top-4 right-4 text-[10px] uppercase font-bold bg-[#1264F5] text-white px-2.5 py-0.5 rounded-full shadow-xs">
                 {plan.badge}
               </span>
             )}
 
             <div>
-              <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
-              <p className="text-xs text-slate-400 mb-4">{plan.washes}</p>
+              <h3 className="text-lg font-bold text-[#10213F] mb-1">{plan.name}</h3>
+              <p className="text-xs text-[#64748B] mb-4">{plan.washes}</p>
 
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-3xl font-extrabold text-cyan-400">₹{plan.price}</span>
-                <span className="text-xs text-slate-400">/ {plan.validity}</span>
+                <span className="text-3xl font-black text-[#10213F]">₹{plan.price}</span>
+                <span className="text-xs text-[#64748B]">/ {plan.validity}</span>
               </div>
 
-              <ul className="space-y-2.5 mb-6 text-xs text-slate-300">
+              <ul className="space-y-2.5 mb-6 text-xs text-[#64748B]">
                 {plan.benefits.map((b, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
                     <span>{b}</span>
                   </li>
                 ))}
@@ -99,9 +99,8 @@ export const MembershipPage = () => {
             <Button
               onClick={() => handleSubscribe(plan)}
               variant="primary"
-              size="md"
               fullWidth
-              icon={Sparkles}
+              size="md"
             >
               Subscribe Now
             </Button>

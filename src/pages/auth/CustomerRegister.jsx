@@ -52,85 +52,87 @@ export const CustomerRegister = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-slate-950 text-slate-100 relative overflow-hidden">
-      <div className="w-full max-w-md glass-panel border border-slate-700/60 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-[#F7F9FC] text-[#10213F] relative overflow-hidden">
+      <div className="w-full max-w-md bg-white border border-[#E6ECF5] rounded-3xl p-6 sm:p-8 shadow-xl relative z-10">
         <div className="flex flex-col items-center text-center mb-6">
           <Logo size="lg" className="mb-3" />
-          <h2 className="text-2xl font-extrabold text-white">Create Account</h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Join AquaGo Wash for fast doorstep vehicle cleaning
+          <h2 className="text-2xl font-black text-[#10213F]">Create Account</h2>
+          <p className="text-xs text-[#64748B] mt-1">
+            Join AquaGo Wash for fast doorstep vehicle detailing
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <Input
-            label="Full Name"
-            type="text"
+            label="Full Name *"
             placeholder="e.g. Rahul Sharma"
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            icon={User}
             error={errors.fullName}
+            icon={User}
             required
           />
 
           <Input
-            label="Mobile Number"
-            type="tel"
+            label="Mobile Number *"
             placeholder="e.g. 9876543210"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            icon={Phone}
             error={errors.phone}
+            icon={Phone}
             required
           />
 
           <Input
-            label="Email Address"
+            label="Email Address *"
             type="email"
             placeholder="e.g. rahul@example.com"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            icon={Mail}
             error={errors.email}
+            icon={Mail}
             required
           />
 
           <Input
-            label="Password"
+            label="Create Password *"
             type="password"
-            placeholder="Create password (min 6 chars)"
+            placeholder="Minimum 6 characters"
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            icon={Lock}
             error={errors.password}
+            icon={Lock}
             required
           />
 
           <Input
-            label="Confirm Password"
+            label="Confirm Password *"
             type="password"
             placeholder="Re-enter password"
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            icon={Lock}
             error={errors.confirmPassword}
+            icon={Lock}
             required
           />
 
           <div className="pt-1">
-            <label className="flex items-start gap-2.5 text-xs text-slate-300 cursor-pointer">
+            <label className="flex items-start gap-2 cursor-pointer text-xs text-[#64748B]">
               <input
                 type="checkbox"
                 checked={formData.agreeTerms}
                 onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
-                className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500/20 mt-0.5"
+                className="mt-0.5 rounded border-[#CBD5E1] text-[#1264F5] focus:ring-[#1264F5]"
               />
               <span>
-                I agree to the <Link to="/help" className="text-cyan-400 underline">Terms & Conditions</Link> and <Link to="/help" className="text-cyan-400 underline">Privacy Policy</Link>
+                I agree to AquaGo's{' '}
+                <a href="#terms" className="text-[#1264F5] hover:underline font-bold">Terms of Service</a> &{' '}
+                <a href="#privacy" className="text-[#1264F5] hover:underline font-bold">Privacy Policy</a>
               </span>
             </label>
-            {errors.agreeTerms && <p className="text-xs text-rose-400 mt-1">{errors.agreeTerms}</p>}
+            {errors.agreeTerms && (
+              <span className="text-xs text-[#EF4444] font-medium block mt-1">{errors.agreeTerms}</span>
+            )}
           </div>
 
           <Button
@@ -140,19 +142,23 @@ export const CustomerRegister = () => {
             fullWidth
             isLoading={isLoading}
             icon={UserPlus}
-            className="shadow-lg shadow-cyan-500/25 mt-3"
+            className="mt-2"
           >
-            Create Account
+            Create Account & Verify OTP
           </Button>
-        </form>
 
-        <div className="text-center mt-6 pt-4 border-t border-slate-800/80 text-xs">
-          <span className="text-slate-400">Already have an account? </span>
-          <Link to="/login" className="font-bold text-cyan-400 hover:underline">
-            Log In
-          </Link>
-        </div>
+          <div className="text-center pt-4 border-t border-[#E6ECF5] text-xs text-[#64748B]">
+            Already have an account?{' '}
+            <Link to="/login" className="text-[#1264F5] font-bold hover:underline">
+              Sign In
+            </Link>
+          </div>
+        </form>
       </div>
+
+      <p className="text-center text-xs text-[#94A3B8] mt-6">
+        © {new Date().getFullYear()} AquaGo Wash. All rights reserved.
+      </p>
     </div>
   );
 };

@@ -71,100 +71,138 @@ export const ProfilePage = () => {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-16">
-      {/* 37. PROFILE HEADER */}
-      <div className="glass-panel p-6 rounded-3xl border border-slate-800 flex items-center justify-between">
+    <div className="max-w-2xl mx-auto space-y-6 pb-20 animate-fadeIn">
+      {/* PROFILE HEADER */}
+      <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] shadow-xs flex items-center justify-between">
         <div className="flex items-center gap-4">
           <img
             src={user?.profilePic || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
             alt={user?.name}
-            className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-lg"
+            className="w-16 h-16 rounded-2xl object-cover border-2 border-[#1264F5]/30 shadow-xs"
           />
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-white">{user?.name || 'Rahul Sharma'}</h2>
-              <span className="text-[10px] bg-cyan-500/10 text-cyan-400 font-extrabold px-2 py-0.5 rounded-full border border-cyan-500/30">
+              <h2 className="text-lg font-black text-[#10213F]">{user?.name || 'Rahul Sharma'}</h2>
+              <span className="text-[10px] bg-[#F0F6FF] text-[#1264F5] font-extrabold px-2 py-0.5 rounded-full border border-[#BFDBFE]">
                 PRO
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">{user?.email}</p>
-            <p className="text-xs text-slate-400">{user?.phone}</p>
+            <p className="text-xs text-[#64748B] mt-0.5">{user?.email}</p>
+            <p className="text-xs text-[#94A3B8] font-mono">{user?.phone}</p>
           </div>
         </div>
 
         <button
           onClick={() => setShowEditModal(true)}
-          className="p-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-400 rounded-xl transition-colors"
+          className="p-2.5 bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E6ECF5] text-[#1264F5] rounded-xl transition-colors cursor-pointer"
           title="Edit Profile"
         >
           <Edit2 className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Menu Groups */}
-      {menuGroups.map((group, idx) => (
-        <div key={idx} className="glass-card rounded-2xl p-4 border border-slate-800 space-y-2">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">{group.title}</h3>
-          <div className="space-y-1">
-            {group.items.map((item) => {
+      {/* MENU GROUPS */}
+      <div className="space-y-4">
+        {menuGroups.map((group, gIdx) => (
+          <div key={gIdx} className="bg-white rounded-3xl p-4 border border-[#E6ECF5] shadow-xs space-y-1">
+            <span className="text-[10px] uppercase font-bold text-[#94A3B8] px-3 tracking-wider block mb-1">
+              {group.title}
+            </span>
+            {group.items.map((item, iIdx) => {
               const Icon = item.icon;
               return (
                 <Link
-                  key={item.path}
+                  key={iIdx}
                   to={item.path}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-800/80 transition-colors group"
+                  className="flex items-center justify-between p-3 rounded-2xl hover:bg-[#F8FAFC] transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-slate-900 text-cyan-400 rounded-xl border border-slate-800 group-hover:border-cyan-500/30">
+                    <div className="w-8 h-8 rounded-xl bg-[#F0F6FF] text-[#1264F5] flex items-center justify-center">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">{item.label}</span>
-                      <span className="text-[10px] text-slate-400 block">{item.info}</span>
+                      <span className="text-xs font-bold text-[#10213F] group-hover:text-[#1264F5] transition-colors block">
+                        {item.label}
+                      </span>
+                      {item.info && (
+                        <span className="text-[11px] text-[#94A3B8]">{item.info}</span>
+                      )}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-400 transition-colors" />
+
+                  <ChevronRight className="w-4 h-4 text-[#94A3B8] group-hover:text-[#1264F5] group-hover:translate-x-0.5 transition-all" />
                 </Link>
               );
             })}
           </div>
+        ))}
+
+        {/* LOGOUT BUTTON */}
+        <div className="pt-2">
+          <Button
+            onClick={() => setShowLogoutConfirm(true)}
+            variant="secondary"
+            fullWidth
+            icon={LogOut}
+            className="text-[#EF4444] hover:bg-[#FEF2F2] hover:border-[#FECACA]"
+          >
+            Sign Out Account
+          </Button>
         </div>
-      ))}
+      </div>
 
-      {/* Logout Action */}
-      <button
-        onClick={() => setShowLogoutConfirm(true)}
-        className="w-full glass-card p-4 rounded-2xl border border-rose-500/20 hover:bg-rose-500/10 text-rose-400 font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+      {/* EDIT PROFILE MODAL */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Personal Profile"
+        subtitle="Update your contact details for bookings"
+        maxWidth="max-w-md"
       >
-        <LogOut className="w-4 h-4" /> Log Out of AquaGo
-      </button>
-
-      {/* Edit Profile Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Profile Details">
         <form onSubmit={handleUpdateProfile} className="space-y-4">
-          <Input label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
-          <Input label="Mobile Phone" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          <Input label="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Input
+            label="Full Name *"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <Input
+            label="Mobile Number *"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+          />
+          <Input
+            label="Email Address *"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          <div className="flex gap-2 pt-2">
-            <Button onClick={() => setShowEditModal(false)} variant="secondary" fullWidth type="button">Cancel</Button>
-            <Button variant="primary" fullWidth type="submit">Save Changes</Button>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Save Changes
+            </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Logout Confirmation */}
+      {/* LOGOUT CONFIRM */}
       <ConfirmDialog
         isOpen={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={() => {
           logout();
-          addToast('Logged out successfully', 'info');
           navigate('/login');
         }}
-        title="Log Out of Account?"
-        description="Are you sure you want to log out from AquaGo Wash?"
-        confirmText="Log Out"
+        title="Sign Out?"
+        message="Are you sure you want to sign out of your AquaGo account?"
+        confirmText="Sign Out"
+        confirmVariant="danger"
       />
     </div>
   );

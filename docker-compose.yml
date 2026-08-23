@@ -1,38 +1,119 @@
 services:
-  db:
+  # 1. Shared MySQL Database
+  mysql:
     image: mysql:8.0
-    container_name: mobile_wash_mysql
-    restart: always
+    container_name: aquago_mysql
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: mobile_wash
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-mobile_wash}
     ports:
-      - "3307:3306"
+      - "${DB_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - aquago_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-root}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 12
+      start_period: 10s
 
+  # 2. Shared FastAPI Backend API
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: mobile_wash_backend
-    restart: always
+    container_name: aquago_backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-5000}:5000"
     environment:
-      - DATABASE_URL=mysql+pymysql://root:password@db:3306/mobile_wash
-      - JWT_SECRET_KEY=aquago_super_secret_jwt_key_2026_change_in_production
+      - PORT=5000
+      - DATABASE_URL=mysql+pymysql://${DB_USER:-root}:${DB_PASSWORD:-root}@mysql:3306/${DB_NAME:-mobile_wash}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-mobile_wash}
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET_KEY=${JWT_SECRET:-aquago_super_secret_jwt_key_2026_change_in_production}
       - JWT_ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=1440
-      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:5000,http://127.0.0.1:5000
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-rzp_test_mockkey123}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-rzp_secret_mocksecret456}
+    volumes:
+      - uploads_data:/app/backend/uploads
     depends_on:
-      db:
+      mysql:
         condition: service_healthy
+    networks:
+      - aquago_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 8s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # 3. Customer Web App
+  customer:
+    build:
+      context: .
+      dockerfile: apps/customer/Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api/v1}
+    container_name: aquago_customer
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - aquago_network
+
+  # 4. Worker Web App
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api/v1}
+    container_name: aquago_worker
+    restart: unless-stopped
+    ports:
+      - "5174:5174"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - aquago_network
+
+  # 5. Admin Web App
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000/api/v1}
+    container_name: aquago_admin
+    restart: unless-stopped
+    ports:
+      - "5175:5175"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - aquago_network
+
+networks:
+  aquago_network:
+    driver: bridge
 
 volumes:
   mysql_data:
+    driver: local
+  uploads_data:
+    driver: local

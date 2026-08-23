@@ -33,44 +33,46 @@ export const ServiceDetailPage = () => {
       vehicle: selectedVehicle || prev.vehicle,
       address: selectedAddress || prev.address
     }));
-    navigate('/book');
+    navigate(`/booking/${service.id}`);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-4xl mx-auto space-y-6 pb-16 animate-fadeIn">
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-semibold"
+        className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#10213F] font-bold cursor-pointer transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Services
       </button>
 
       {/* Main Details Banner */}
-      <div className="glass-card rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
+      <div className="bg-white rounded-3xl overflow-hidden border border-[#E6ECF5] shadow-xs">
         <div className="relative h-64 sm:h-80 w-full">
           <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#10213F]/80 via-transparent to-transparent" />
           
           {service.badge && (
-            <span className="absolute top-4 left-4 bg-cyan-500 text-slate-950 font-extrabold text-xs uppercase tracking-wider px-3 py-1 rounded-full shadow-lg">
+            <span className="absolute top-4 left-4 bg-[#1264F5] text-white font-extrabold text-xs uppercase tracking-wider px-3 py-1 rounded-full shadow-md">
               {service.badge}
             </span>
           )}
 
           <div className="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <RatingStars rating={service.rating} count={service.reviewsCount} size="sm" className="mb-2" />
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{service.name}</h1>
-              <span className="inline-flex items-center gap-1.5 text-xs text-cyan-300 bg-slate-900/80 backdrop-blur-md px-3 py-1 rounded-lg border border-slate-700/80 mt-2">
-                <Clock className="w-3.5 h-3.5 text-cyan-400" /> Duration: {service.duration}
+              <div className="bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg border border-[#E6ECF5] inline-block mb-2 shadow-xs">
+                <RatingStars rating={service.rating} count={service.reviewsCount} size="sm" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black text-white drop-shadow-sm">{service.name}</h1>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#10213F] bg-white/95 backdrop-blur-md px-3 py-1 rounded-lg border border-[#E6ECF5] mt-2 shadow-xs">
+                <Clock className="w-3.5 h-3.5 text-[#1264F5]" /> Duration: {service.duration}
               </span>
             </div>
 
-            <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 p-4 rounded-2xl shrink-0 text-right sm:text-left">
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Service Price</span>
+            <div className="bg-white/95 backdrop-blur-md border border-[#E6ECF5] p-4 rounded-2xl shrink-0 text-right sm:text-left shadow-md">
+              <span className="text-[10px] text-[#64748B] uppercase font-bold tracking-wider block">Service Price</span>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-white">₹{service.price}</span>
-                {service.originalPrice && <span className="text-sm text-slate-500 line-through">₹{service.originalPrice}</span>}
+                <span className="text-2xl font-black text-[#10213F]">₹{service.price}</span>
+                {service.originalPrice && <span className="text-sm text-[#94A3B8] line-through">₹{service.originalPrice}</span>}
               </div>
             </div>
           </div>
@@ -79,40 +81,40 @@ export const ServiceDetailPage = () => {
         {/* Description & Requirements */}
         <div className="p-6 sm:p-8 space-y-6">
           <div>
-            <h3 className="text-base font-bold text-white mb-2">Description</h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{service.description}</p>
+            <h3 className="text-base font-bold text-[#10213F] mb-1.5">Description</h3>
+            <p className="text-xs sm:text-sm text-[#64748B] leading-relaxed">{service.description}</p>
           </div>
 
           {/* Included vs Not Included Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800">
-              <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <div className="bg-[#F0FDF4] p-5 rounded-2xl border border-[#BBF7D0]">
+              <h4 className="text-xs font-bold text-[#15803D] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" /> What's Included
               </h4>
-              <ul className="space-y-2 text-xs text-slate-300">
+              <ul className="space-y-2 text-xs text-[#166534]">
                 {service.included?.map((inc, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{inc}</span>
+                    <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                    <span className="font-medium">{inc}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="bg-slate-900/70 p-5 rounded-2xl border border-slate-800">
-              <h4 className="text-xs font-bold text-rose-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <div className="bg-[#FEF2F2] p-5 rounded-2xl border border-[#FECACA]">
+              <h4 className="text-xs font-bold text-[#B91C1C] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                 <XCircle className="w-4 h-4" /> What's Not Included
               </h4>
-              <ul className="space-y-2 text-xs text-slate-400">
+              <ul className="space-y-2 text-xs text-[#991B1B]">
                 {service.notIncluded?.length > 0 ? (
                   service.notIncluded.map((exc, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 bg-rose-500 rounded-full shrink-0 mt-1.5" />
-                      <span>{exc}</span>
+                      <span className="w-1.5 h-1.5 bg-[#EF4444] rounded-full shrink-0 mt-1.5" />
+                      <span className="font-medium">{exc}</span>
                     </li>
                   ))
                 ) : (
-                  <li className="text-slate-500">None! Everything is included in this combo.</li>
+                  <li className="text-[#991B1B]">None! Everything is included in this combo.</li>
                 )}
               </ul>
             </div>
@@ -120,10 +122,10 @@ export const ServiceDetailPage = () => {
 
           {/* Recommended Vehicles */}
           <div>
-            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Recommended For</h4>
+            <h4 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2">Recommended For</h4>
             <div className="flex flex-wrap gap-2">
               {service.recommendedVehicles?.map((veh, idx) => (
-                <span key={idx} className="bg-slate-800 text-cyan-300 border border-slate-700 px-3 py-1 rounded-xl text-xs font-semibold flex items-center gap-1">
+                <span key={idx} className="bg-[#F0F6FF] text-[#1264F5] border border-[#BFDBFE] px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1">
                   <Car className="w-3.5 h-3.5" /> {veh}
                 </span>
               ))}
@@ -131,13 +133,13 @@ export const ServiceDetailPage = () => {
           </div>
 
           {/* CTA */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+          <div className="pt-4 border-t border-[#E6ECF5] flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-400 block">Total Payable</span>
-              <span className="text-xl font-extrabold text-white">₹{service.price}</span>
+              <span className="text-xs text-[#64748B] block font-medium">Total Payable</span>
+              <span className="text-2xl font-black text-[#10213F]">₹{service.price}</span>
             </div>
 
-            <Button onClick={handleBook} variant="primary" size="lg" icon={Sparkles} className="shadow-lg shadow-cyan-500/25">
+            <Button onClick={handleBook} variant="primary" size="lg" icon={Sparkles}>
               Book This Service Now
             </Button>
           </div>

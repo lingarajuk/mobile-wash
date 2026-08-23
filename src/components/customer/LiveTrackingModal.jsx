@@ -20,124 +20,104 @@ export const LiveTrackingModal = ({ isOpen, onClose, booking }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Live Washing Professional Tracking"
-      subtitle={`Booking #${booking.id} • ${booking.service.name}`}
+      subtitle={`Booking #${booking.bookingNumber || booking.id} • ${booking.service?.name}`}
       maxWidth="max-w-xl"
     >
       <div className="space-y-4">
         {/* MAP PLACEHOLDER */}
-        <div className="relative w-full h-60 rounded-2xl overflow-hidden border border-slate-700 bg-slate-900 shadow-inner flex items-center justify-center">
-          {/* Simulated Dark Map Pattern background */}
+        <div className="relative w-full h-60 rounded-2xl overflow-hidden border border-[#E6ECF5] bg-[#F8FAFC] shadow-inner flex items-center justify-center">
           <div
-            className="absolute inset-0 opacity-30 bg-cover bg-center"
+            className="absolute inset-0 opacity-40 bg-cover bg-center"
             style={{
               backgroundImage: `url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80')`
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent" />
 
           {/* Map Route Graphic Simulation */}
-          <svg className="absolute inset-0 w-full h-full stroke-cyan-400 stroke-[3] fill-none" style={{ strokeDasharray: '6 6' }}>
+          <svg className="absolute inset-0 w-full h-full stroke-[#1264F5] stroke-[3] fill-none" style={{ strokeDasharray: '6 6' }}>
             <path d="M 60 180 Q 180 80 340 120" />
           </svg>
 
           {/* Employee Moving Marker */}
           <div className="absolute left-[30%] top-[35%] transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-bounce">
-            <div className="bg-cyan-500 text-slate-950 p-2 rounded-full shadow-lg shadow-cyan-500/50 border-2 border-white">
-              <Car className="w-5 h-5 fill-slate-950" />
+            <div className="bg-[#1264F5] text-white p-2 rounded-full shadow-lg border-2 border-white">
+              <Car className="w-5 h-5 fill-white" />
             </div>
-            <span className="bg-slate-900/90 text-cyan-300 font-bold text-[10px] px-2 py-0.5 rounded-full border border-cyan-500/40 mt-1 shadow">
+            <span className="bg-white text-[#1264F5] font-bold text-[10px] px-2 py-0.5 rounded-full border border-[#BFDBFE] mt-1 shadow-xs">
               Technician (En Route)
             </span>
           </div>
 
           {/* Customer Destination Marker */}
           <div className="absolute right-[20%] top-[45%] transform translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-            <div className="bg-rose-500 text-white p-2 rounded-full shadow-lg shadow-rose-500/50 border-2 border-white">
+            <div className="bg-[#EF4444] text-white p-2 rounded-full shadow-lg border-2 border-white">
               <MapPin className="w-5 h-5 fill-white" />
             </div>
-            <span className="bg-slate-900/90 text-white font-bold text-[10px] px-2 py-0.5 rounded-full border border-slate-700 mt-1">
+            <span className="bg-white text-[#10213F] font-bold text-[10px] px-2 py-0.5 rounded-full border border-[#E6ECF5] mt-1 shadow-xs">
               Your Doorstep
             </span>
           </div>
-
-          {/* ETA Floating Card */}
-          <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 shadow-xl">
-            <Clock className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '6s' }} />
-            <div>
-              <span className="text-[10px] text-slate-400 block font-semibold">Estimated Arrival</span>
-              <span className="text-sm font-extrabold text-white">12 – 15 Mins (2.4 km)</span>
-            </div>
-          </div>
         </div>
 
-        {/* EMPLOYEE ASSIGNED CARD */}
-        <div className="glass-card p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
+        {/* ETA & Distance Strip */}
+        <div className="bg-[#F0F6FF] border border-[#BFDBFE] p-3 rounded-2xl flex items-center justify-between text-xs text-[#1264F5]">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#1264F5]" />
+            <span className="font-bold">Estimated Arrival: <strong>12 Mins</strong> (3.4 km away)</span>
+          </div>
+          <span className="text-[10px] uppercase font-mono bg-white px-2 py-0.5 rounded-full font-bold border border-[#BFDBFE]">
+            Live GPS Active
+          </span>
+        </div>
+
+        {/* Technician Profile Card */}
+        <div className="bg-[#F8FAFC] border border-[#E6ECF5] p-4 rounded-2xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             <img
               src={emp.photo}
               alt={emp.name}
-              className="w-14 h-14 rounded-2xl object-cover border-2 border-cyan-500/50"
+              className="w-12 h-12 rounded-xl object-cover border border-[#E6ECF5]"
             />
             <div>
-              <div className="flex items-center gap-2">
-                <h4 className="text-sm font-bold text-white">{emp.name}</h4>
-                <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> Verified Pro
-                </span>
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <RatingStars rating={emp.rating} size="xs" />
-                <span className="text-slate-600">•</span>
-                <span className="text-xs text-slate-400">{emp.completedJobs} jobs done</span>
+              <h4 className="text-sm font-bold text-[#10213F]">{emp.name}</h4>
+              <div className="flex items-center gap-1 mt-0.5">
+                <RatingStars rating={emp.rating} size="sm" showValue={true} />
+                <span className="text-[10px] text-[#64748B]">({emp.completedJobs} washes)</span>
               </div>
             </div>
           </div>
 
-          {/* Call & Message Actions */}
           <div className="flex items-center gap-2">
             <a
               href={`tel:${emp.phone}`}
-              className="p-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-xl transition-colors"
-              title="Call Professional"
+              className="p-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl transition-colors shadow-xs"
+              title="Call Technician"
             >
               <Phone className="w-4 h-4" />
             </a>
-            <button
-              onClick={() => alert(`Opening chat window with ${emp.name}`)}
-              className="p-2.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 border border-cyan-500/40 rounded-xl transition-colors"
-              title="Send Message"
+            <a
+              href={`https://wa.me/${emp.phone.replace(/[^0-9]/g, '')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="p-2.5 bg-[#1264F5] hover:bg-[#0F52CC] text-white rounded-xl transition-colors shadow-xs"
+              title="Message Technician"
             >
               <MessageSquare className="w-4 h-4" />
-            </button>
+            </a>
           </div>
         </div>
 
-        {/* TIMELINE PROGRESS */}
-        <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
-          <h5 className="text-xs font-bold text-slate-300 mb-3">Service Timeline Status</h5>
-          <div className="space-y-3 relative pl-4 border-l-2 border-slate-800">
-            <div className="relative">
-              <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-4 ring-slate-900" />
-              <p className="text-xs font-bold text-emerald-400">Booking Confirmed</p>
-              <p className="text-[10px] text-slate-400">System verified date & slot</p>
-            </div>
-            <div className="relative">
-              <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-4 ring-slate-900" />
-              <p className="text-xs font-bold text-emerald-400">Professional Assigned ({emp.name})</p>
-              <p className="text-[10px] text-slate-400">Equipped with mobile high-pressure foam unit</p>
-            </div>
-            <div className="relative">
-              <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping ring-4 ring-slate-900" />
-              <p className="text-xs font-bold text-cyan-400">Professional On The Way 🚗</p>
-              <p className="text-[10px] text-slate-400">Driving to {booking.address.area}, Mysuru</p>
-            </div>
-            <div className="relative opacity-50">
-              <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-slate-700 ring-4 ring-slate-900" />
-              <p className="text-xs font-bold text-slate-300">Service In Progress</p>
-              <p className="text-[10px] text-slate-400">High pressure wash & detailing</p>
-            </div>
-          </div>
+        {/* Service Address */}
+        <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E6ECF5] text-xs text-[#64748B] flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-[#1264F5] shrink-0" />
+          <span className="truncate">Destination: <strong className="text-[#10213F]">{booking.address?.house}, {booking.address?.area}, {booking.address?.city}</strong></span>
         </div>
+
+        {/* Close Button */}
+        <Button onClick={onClose} variant="secondary" fullWidth>
+          Close Live Tracking
+        </Button>
       </div>
     </Modal>
   );

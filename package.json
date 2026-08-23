@@ -1,11 +1,18 @@
 {
-  "name": "mobile-wash",
+  "name": "aquago-wash-monorepo",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --config apps/customer/vite.config.js --port 5173",
+    "dev:customer": "vite --config apps/customer/vite.config.js --port 5173",
+    "dev:worker": "vite --config apps/worker/vite.config.js --port 5174",
+    "dev:admin": "vite --config apps/admin/vite.config.js --port 5175",
+    "build": "npm run build:all",
+    "build:customer": "vite build --config apps/customer/vite.config.js",
+    "build:worker": "vite build --config apps/worker/vite.config.js",
+    "build:admin": "vite build --config apps/admin/vite.config.js",
+    "build:all": "npm run build:customer && npm run build:worker && npm run build:admin",
     "lint": "oxlint",
     "preview": "vite preview"
   },

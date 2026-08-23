@@ -33,51 +33,54 @@ export const ServiceComparisonModal = ({ isOpen, onClose, onSelectService }) => 
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr>
-              <th className="p-3 bg-slate-900/90 text-slate-300 font-bold border-b border-slate-800 rounded-tl-xl w-1/4">
+              <th className="p-3 bg-[#F8FAFC] text-[#64748B] font-bold border-b border-[#E6ECF5] rounded-tl-xl w-1/4">
                 Feature
               </th>
-              <th className="p-3 bg-slate-900/90 text-center border-b border-slate-800 w-1/4">
-                <span className="font-bold text-white text-sm block">{basic.name}</span>
-                <span className="text-cyan-400 font-extrabold text-base">₹{basic.price}</span>
-                <span className="text-[10px] text-slate-400 block">{basic.duration}</span>
+              <th className="p-3 bg-[#F8FAFC] text-center border-b border-[#E6ECF5] w-1/4">
+                <span className="font-bold text-[#10213F] text-sm block">{basic.name}</span>
+                <span className="text-[#1264F5] font-black text-base">₹{basic.price}</span>
+                <span className="text-[10px] text-[#64748B] block">{basic.duration}</span>
               </th>
-              <th className="p-3 bg-slate-900/90 text-center border-b border-cyan-500/40 border-t-2 border-t-cyan-400 bg-cyan-500/5 w-1/4">
-                <span className="font-bold text-cyan-300 text-sm block flex items-center justify-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" /> {premium.name}
+              <th className="p-3 bg-[#F0F6FF] text-center border-b border-[#BFDBFE] border-t-2 border-t-[#1264F5] w-1/4">
+                <span className="font-bold text-[#1264F5] text-sm block flex items-center justify-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" /> {premium.name}
                 </span>
-                <span className="text-cyan-400 font-extrabold text-base">₹{premium.price}</span>
-                <span className="text-[10px] text-slate-400 block">{premium.duration}</span>
+                <span className="text-[#1264F5] font-black text-base">₹{premium.price}</span>
+                <span className="text-[10px] text-[#64748B] block">{premium.duration}</span>
               </th>
-              <th className="p-3 bg-slate-900/90 text-center border-b border-slate-800 rounded-tr-xl w-1/4">
-                <span className="font-bold text-white text-sm block">{combo.name}</span>
-                <span className="text-cyan-400 font-extrabold text-base">₹{combo.price}</span>
-                <span className="text-[10px] text-slate-400 block">{combo.duration}</span>
+              <th className="p-3 bg-[#F8FAFC] text-center border-b border-[#E6ECF5] rounded-tr-xl w-1/4">
+                <span className="font-bold text-[#10213F] text-sm block">{combo.name}</span>
+                <span className="text-[#1264F5] font-black text-base">₹{combo.price}</span>
+                <span className="text-[10px] text-[#64748B] block">{combo.duration}</span>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/80">
+          <tbody className="divide-y divide-[#E6ECF5]">
             {features.map((feat, idx) => (
-              <tr key={idx} className="hover:bg-slate-900/40">
-                <td className="p-3 font-medium text-slate-300">{feat.name}</td>
+              <tr key={idx} className="hover:bg-[#F8FAFC]">
+                <td className="p-3 font-semibold text-[#10213F]">{feat.name}</td>
+                
                 <td className="p-3 text-center">
                   {feat.basic ? (
-                    <Check className="w-4 h-4 text-emerald-400 mx-auto" />
+                    <Check className="w-4 h-4 text-[#16A34A] mx-auto stroke-[3]" />
                   ) : (
-                    <X className="w-4 h-4 text-slate-600 mx-auto" />
+                    <X className="w-4 h-4 text-[#94A3B8] mx-auto opacity-40" />
                   )}
                 </td>
-                <td className="p-3 text-center bg-cyan-500/5">
+
+                <td className="p-3 text-center bg-[#F0F6FF]/50">
                   {feat.premium ? (
-                    <Check className="w-4 h-4 text-emerald-400 mx-auto" />
+                    <Check className="w-4 h-4 text-[#16A34A] mx-auto stroke-[3]" />
                   ) : (
-                    <X className="w-4 h-4 text-slate-600 mx-auto" />
+                    <X className="w-4 h-4 text-[#94A3B8] mx-auto opacity-40" />
                   )}
                 </td>
+
                 <td className="p-3 text-center">
                   {feat.combo ? (
-                    <Check className="w-4 h-4 text-emerald-400 mx-auto" />
+                    <Check className="w-4 h-4 text-[#16A34A] mx-auto stroke-[3]" />
                   ) : (
-                    <X className="w-4 h-4 text-slate-600 mx-auto" />
+                    <X className="w-4 h-4 text-[#94A3B8] mx-auto opacity-40" />
                   )}
                 </td>
               </tr>
@@ -85,35 +88,35 @@ export const ServiceComparisonModal = ({ isOpen, onClose, onSelectService }) => 
           </tbody>
           <tfoot>
             <tr>
-              <td className="p-3"></td>
+              <td className="p-3" />
               <td className="p-3 text-center">
                 <Button
-                  onClick={() => { onSelectService(basic); onClose(); }}
-                  variant="outline"
-                  size="sm"
-                  fullWidth
-                >
-                  Select Basic
-                </Button>
-              </td>
-              <td className="p-3 text-center bg-cyan-500/5">
-                <Button
-                  onClick={() => { onSelectService(premium); onClose(); }}
-                  variant="primary"
-                  size="sm"
-                  fullWidth
-                >
-                  Select Premium
-                </Button>
-              </td>
-              <td className="p-3 text-center">
-                <Button
-                  onClick={() => { onSelectService(combo); onClose(); }}
+                  onClick={() => { onClose(); onSelectService && onSelectService(basic.id); }}
                   variant="secondary"
                   size="sm"
                   fullWidth
                 >
-                  Select Combo
+                  Book Basic
+                </Button>
+              </td>
+              <td className="p-3 text-center bg-[#F0F6FF]/50">
+                <Button
+                  onClick={() => { onClose(); onSelectService && onSelectService(premium.id); }}
+                  variant="primary"
+                  size="sm"
+                  fullWidth
+                >
+                  Book Premium
+                </Button>
+              </td>
+              <td className="p-3 text-center">
+                <Button
+                  onClick={() => { onClose(); onSelectService && onSelectService(combo.id); }}
+                  variant="secondary"
+                  size="sm"
+                  fullWidth
+                >
+                  Book Combo
                 </Button>
               </td>
             </tr>

@@ -142,7 +142,7 @@ def get_admin_bookings(
     current_user: User = Depends(require_admin)
 ):
     bookings = db.query(Booking).order_by(Booking.created_at.desc()).all()
-    return [BookingService.format_booking_response(b) for b in bookings]
+    return [BookingService.format_booking_response(db, b) for b in bookings]
 
 @router.get("/bookings/{booking_id}", response_model=dict)
 def get_admin_booking_by_id(
@@ -153,36 +153,29 @@ def get_admin_booking_by_id(
     b = db.query(Booking).filter(Booking.id == booking_id).first()
     if not b:
         raise HTTPException(status_code=404, detail="Booking not found")
-    return BookingService.format_booking_response(b)
+    return BookingService.format_booking_response(db, b)
 
+@router.put("/bookings/{booking_id}/verify", response_model=dict)
 @router.put("/bookings/{booking_id}/accept", response_model=dict)
-def accept_booking_by_admin(
+def verify_booking_by_admin(
     booking_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
-    b = db.query(Booking).filter(Booking.id == booking_id).first()
-    if not b:
-        raise HTTPException(status_code=404, detail="Booking not found")
+    return BookingService.verify_booking(db, booking_id, current_user)
 
-    if b.status != BookingStatus.PENDING:
-        raise HTTPException(status_code=400, detail=f"Booking is currently {b.status.value}, expected PENDING")
-
-    b.status = BookingStatus.CONFIRMED
-    b.progress_step = 1
-
-    BookingService.record_status_change(db, booking_id, "CONFIRMED", current_user.id, "Admin accepted booking")
-    BookingService.create_notification(
-        db, b.customer_id,
-        "Booking Confirmed! ✅",
-        f"Your booking #{booking_id} for {b.service.name} has been accepted and confirmed by Admin."
-    )
-
-    db.commit()
-    db.refresh(b)
-    return BookingService.format_booking_response(b)
+@router.put("/bookings/{booking_id}/reject", response_model=dict)
+def reject_booking_by_admin(
+    booking_id: str,
+    data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    reason = data.get("reason", "Booking rejected by supervisor")
+    return BookingService.reject_booking(db, booking_id, current_user, reason)
 
 @router.post("/bookings/{booking_id}/assign", response_model=dict)
+@router.put("/bookings/{booking_id}/assign", response_model=dict)
 def assign_employee_to_booking(
     booking_id: str,
     data: dict,
@@ -190,33 +183,9 @@ def assign_employee_to_booking(
     current_user: User = Depends(require_admin)
 ):
     employee_id = data.get("employeeId") or data.get("employee_id")
-    b = db.query(Booking).filter(Booking.id == booking_id).first()
-    if not b:
-        raise HTTPException(status_code=404, detail="Booking not found")
-
-    emp = db.query(Employee).filter(Employee.id == employee_id).first()
-    if not emp:
-        raise HTTPException(status_code=404, detail="Employee not found")
-
-    b.employee_id = emp.id
-    b.status = BookingStatus.ASSIGNED
-    b.progress_step = 1
-
-    BookingService.record_status_change(db, booking_id, "ASSIGNED", current_user.id, f"Assigned to {emp.user.full_name}")
-    BookingService.create_notification(
-        db, b.customer_id,
-        "Professional Assigned 👨‍🔧",
-        f"{emp.user.full_name} has been assigned to your booking #{booking_id}."
-    )
-    BookingService.create_notification(
-        db, emp.user.id,
-        "New Job Assigned! 🚗",
-        f"You have been assigned to booking #{booking_id} for {b.service.name} on {b.scheduled_date}."
-    )
-
-    db.commit()
-    db.refresh(b)
-    return BookingService.format_booking_response(b)
+    if not employee_id:
+        raise HTTPException(status_code=400, detail="Employee ID is required")
+    return BookingService.assign_technician(db, booking_id, employee_id, current_user)
 
 @router.post("/services", response_model=dict, status_code=status.HTTP_201_CREATED)
 def create_service(

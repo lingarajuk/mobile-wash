@@ -40,15 +40,15 @@ export const MyVehiclesPage = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-12">
-      <button onClick={() => navigate('/profile')} className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-semibold">
+    <div className="max-w-2xl mx-auto space-y-6 pb-16 animate-fadeIn">
+      <button onClick={() => navigate('/profile')} className="flex items-center gap-1.5 text-xs text-[#64748B] hover:text-[#10213F] font-bold cursor-pointer transition-colors">
         <ArrowLeft className="w-4 h-4" /> Back to Profile
       </button>
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-white">Saved Vehicles</h1>
-          <p className="text-xs text-slate-400">Manage your cars & bikes for quick 1-tap bookings</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#10213F]">Saved Vehicles</h1>
+          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Manage your cars & bikes for quick 1-tap bookings</p>
         </div>
 
         <Button onClick={() => setShowAddModal(true)} variant="primary" size="sm" icon={Plus}>
@@ -61,45 +61,89 @@ export const MyVehiclesPage = () => {
           <VehicleCard
             key={v.id}
             vehicle={v}
-            isSelected={false}
             onDelete={(id) => setDeleteId(id)}
           />
         ))}
+
+        {vehicles.length === 0 && (
+          <div className="bg-white rounded-3xl p-10 border border-[#E6ECF5] text-center space-y-3 shadow-xs">
+            <Car className="w-10 h-10 text-[#94A3B8] mx-auto" />
+            <h3 className="text-base font-bold text-[#10213F]">No Vehicles Saved Yet</h3>
+            <p className="text-xs text-[#64748B]">Add your car or motorcycle to speed up your wash bookings.</p>
+            <Button onClick={() => setShowAddModal(true)} variant="primary" size="sm" icon={Plus}>
+              Add Your First Vehicle
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Add Vehicle Modal */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add Vehicle">
-        <form onSubmit={handleAdd} className="space-y-3">
+      {/* ADD VEHICLE MODAL */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Vehicle"
+        subtitle="Saved to your account for doorstep bookings"
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleAdd} className="space-y-4">
           <Select
-            label="Vehicle Category"
+            label="Vehicle Category *"
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
             options={VEHICLE_CATEGORIES.map(c => ({ value: c.id, label: c.name }))}
           />
-          <Input label="Brand / Make" placeholder="e.g. Hyundai" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} required />
-          <Input label="Model" placeholder="e.g. Creta SX" value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} required />
-          <Input label="Registration Number" placeholder="e.g. KA-09-MA-7821" value={form.regNumber} onChange={(e) => setForm({ ...form, regNumber: e.target.value })} required />
-          <Input label="Vehicle Color" placeholder="e.g. Titan Grey" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} />
-          
-          <div className="pt-2 flex gap-2">
-            <Button onClick={() => setShowAddModal(false)} variant="secondary" fullWidth type="button">Cancel</Button>
-            <Button variant="primary" fullWidth type="submit">Add Vehicle</Button>
+          <Input
+            label="Brand / Manufacturer *"
+            placeholder="e.g. Hyundai, Honda, Tata, RE"
+            value={form.brand}
+            onChange={(e) => setForm({ ...form, brand: e.target.value })}
+            required
+          />
+          <Input
+            label="Model Name *"
+            placeholder="e.g. Creta SX, City ZX, Nexon EV"
+            value={form.model}
+            onChange={(e) => setForm({ ...form, model: e.target.value })}
+            required
+          />
+          <Input
+            label="Registration Number *"
+            placeholder="e.g. KA-09-MA-7821"
+            value={form.regNumber}
+            onChange={(e) => setForm({ ...form, regNumber: e.target.value.toUpperCase() })}
+            required
+          />
+          <Input
+            label="Body Color"
+            placeholder="e.g. Polar White, Phantom Black"
+            value={form.color}
+            onChange={(e) => setForm({ ...form, color: e.target.value })}
+          />
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setShowAddModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Save Vehicle
+            </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Delete Confirmation */}
+      {/* CONFIRM DELETE */}
       <ConfirmDialog
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={() => {
           removeVehicle(deleteId);
           setDeleteId(null);
-          addToast('Vehicle removed', 'info');
+          addToast('Vehicle removed from saved list', 'info');
         }}
-        title="Delete Vehicle?"
-        description="Are you sure you want to remove this vehicle from your profile?"
-        confirmText="Delete"
+        title="Remove Vehicle?"
+        message="Are you sure you want to remove this vehicle from your account?"
+        confirmText="Remove"
+        confirmVariant="danger"
       />
     </div>
   );

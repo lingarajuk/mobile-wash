@@ -1,705 +1,1120 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { VehicleCard } from '../../components/customer/VehicleCard';
-import { ServiceCard } from '../../components/customer/ServiceCard';
+import { serviceService, bookingService } from '../../services/api';
+import { INITIAL_SERVICES, ADD_ONS, VEHICLE_CATEGORIES, INITIAL_COUPONS } from '../../data/mockData';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Select } from '../../components/common/Select';
-import { Modal } from '../../components/common/Modal';
-import { INITIAL_SERVICES, ADD_ONS, INITIAL_COUPONS, VEHICLE_CATEGORIES } from '../../data/mockData';
+import { CardSkeleton } from '../../components/common/SkeletonLoader';
 import {
   Car,
+  Bike,
   Sparkles,
   MapPin,
   Calendar,
   Clock,
-  Plus,
+  Camera,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
   Tag,
   CreditCard,
-  CheckCircle2,
-  ChevronRight,
-  ChevronLeft,
+  X,
+  Compass,
   Navigation,
   ShieldCheck,
   Building,
-  Check
+  Check,
+  ArrowRight,
+  Info,
+  Layers,
+  Wand2,
+  Trash2
 } from 'lucide-react';
 
 export const BookingFlowPage = () => {
+  const { serviceId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const { user, vehicles, addresses, addBooking, bookingDraft, setBookingDraft } = useAuth();
   const { addToast } = useToast();
-  const {
-    vehicles,
-    addVehicle,
-    addresses,
-    addAddress,
-    addBooking,
-    bookingDraft,
-    setBookingDraft
-  } = useAuth();
 
-  // Wizard Steps: 1: Vehicle, 2: Service, 3: Location, 4: Schedule, 5: Addons & Coupons, 6: Summary & Payment, 7: Success
-  const [currentStep, setCurrentStep] = useState(1);
+  // 1. Fetch Service from Database
+  const [selectedService, setSelectedService] = useState(null);
+  const [loadingService, setLoadingService] = useState(true);
+  const [availableAddons, setAvailableAddons] = useState(ADD_ONS);
 
-  // Modal toggles for inline adding
-  const [showAddVehModal, setShowAddVehModal] = useState(false);
-  const [showAddAddrModal, setShowAddAddrModal] = useState(false);
+  // Determine active service ID from URL param, location state, or default
+  const activeServiceId = serviceId || location.state?.serviceId || bookingDraft?.service?.id || 'srv-2';
 
-  // New vehicle form
-  const [newVehData, setNewVehData] = useState({
-    type: 'sedan',
-    brand: '',
-    model: '',
-    regNumber: '',
-    color: ''
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingService(true);
+
+    // Fetch Service
+    serviceService.getServiceById(activeServiceId)
+      .then((srv) => {
+        if (isMounted && srv) {
+          setSelectedService(srv);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          const fallback = INITIAL_SERVICES.find(s => s.id === activeServiceId) || INITIAL_SERVICES[1];
+          setSelectedService(fallback);
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoadingService(false);
+      });
+
+    // Fetch Addons from Database
+    serviceService.getAddons()
+      .then((adds) => {
+        if (isMounted && Array.isArray(adds) && adds.length > 0) {
+          setAvailableAddons(adds);
+        }
+      })
+      .catch(() => {});
+
+    return () => { isMounted = false; };
+  }, [activeServiceId]);
+
+  // 2. Customer Information (Auto-populated if logged in)
+  const [customerInfo, setCustomerInfo] = useState({
+    fullName: user?.name || user?.full_name || 'Rahul Sharma',
+    phone: user?.phone || '+91 98765 43210',
+    email: user?.email || 'rahul.sharma@example.com'
   });
 
-  // New address form
-  const [newAddrData, setNewAddrData] = useState({
-    label: 'Home',
-    house: '',
-    street: '',
-    area: '',
-    landmark: '',
+  useEffect(() => {
+    if (user) {
+      setCustomerInfo(prev => ({
+        fullName: user.name || user.full_name || prev.fullName,
+        phone: user.phone || prev.phone,
+        email: user.email || prev.email
+      }));
+    }
+  }, [user]);
+
+  // 3. Vehicle Information
+  const [vehicleSelectionMode, setVehicleSelectionMode] = useState('saved'); // saved | new
+  const [selectedSavedVehicleId, setSelectedSavedVehicleId] = useState(null);
+  const [vehicleData, setVehicleData] = useState({
+    type: 'sedan',
+    brand: 'Honda',
+    model: 'City ZX',
+    regNumber: 'KA-09-MA-7821',
+    color: 'Platinum White'
+  });
+
+  // Auto-select first vehicle if available
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0 && !selectedSavedVehicleId) {
+      const def = vehicles.find(v => v.isDefault) || vehicles[0];
+      setSelectedSavedVehicleId(def.id);
+      setVehicleData({
+        type: def.type || def.vehicle_type || 'sedan',
+        brand: def.brand || 'Honda',
+        model: def.model || 'City',
+        regNumber: def.regNumber || def.registration_number || 'KA-09-MA-7821',
+        color: def.color || 'White'
+      });
+    }
+  }, [vehicles]);
+
+  const handleSelectSavedVehicle = (vId) => {
+    setSelectedSavedVehicleId(vId);
+    const found = vehicles.find(v => v.id === vId);
+    if (found) {
+      setVehicleData({
+        type: found.type || found.vehicle_type || 'sedan',
+        brand: found.brand,
+        model: found.model,
+        regNumber: found.regNumber || found.registration_number,
+        color: found.color || 'White'
+      });
+    }
+  };
+
+  // 4. Vehicle Condition & Problem Notes
+  const [vehicleCondition, setVehicleCondition] = useState('Normal Dirt');
+  const [conditionNotes, setConditionNotes] = useState('');
+
+  // 5. Vehicle Photos (5 slots)
+  const [photos, setPhotos] = useState({
+    front: null,
+    back: null,
+    left: null,
+    right: null,
+    additional: null
+  });
+
+  // 6. Doorstep Service Location
+  const [addressData, setAddressData] = useState({
+    house: 'No. 42, 3rd Floor',
+    street: 'Gokulam 2nd Stage',
+    area: 'Gokulam',
+    landmark: 'Near Water Tank',
     city: 'Mysuru',
     state: 'Karnataka',
-    pincode: '570002'
+    pincode: '570002',
+    latitude: 12.3118,
+    longitude: 76.6529
   });
 
-  // Time Slots
+  useEffect(() => {
+    if (addresses && addresses.length > 0) {
+      const def = addresses.find(a => a.isDefault) || addresses[0];
+      setAddressData({
+        house: def.house || 'No. 42',
+        street: def.street || '',
+        area: def.area || 'Mysuru',
+        landmark: def.landmark || '',
+        city: def.city || 'Mysuru',
+        state: def.state || 'Karnataka',
+        pincode: def.pincode || '570002',
+        latitude: def.latitude || 12.3118,
+        longitude: def.longitude || 76.6529
+      });
+    }
+  }, [addresses]);
+
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationConfirmed, setLocationConfirmed] = useState(true);
+
+  // 7. Schedule Date & Time Slot
+  const todayStr = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('10:00 AM - 11:00 AM');
+
   const timeSlots = [
-    { time: '08:00 AM – 09:00 AM', available: true },
-    { time: '09:00 AM – 10:00 AM', available: true },
-    { time: '10:00 AM – 11:00 AM', available: false },
-    { time: '02:00 PM – 03:00 PM', available: true },
-    { time: '04:00 PM – 05:00 PM', available: true },
-    { time: '06:00 PM – 07:00 PM', available: true }
+    { time: '08:00 AM - 09:00 AM', available: true },
+    { time: '09:00 AM - 10:00 AM', available: true },
+    { time: '10:00 AM - 11:00 AM', available: true },
+    { time: '11:00 AM - 12:00 PM', available: false },
+    { time: '01:00 PM - 02:00 PM', available: true },
+    { time: '02:00 PM - 03:00 PM', available: true },
+    { time: '03:00 PM - 04:00 PM', available: true },
+    { time: '04:00 PM - 05:00 PM', available: true },
+    { time: '05:00 PM - 06:00 PM', available: true }
   ];
 
-  // Selection states inside draft
-  const selectedVehicle = bookingDraft.vehicle || vehicles[0];
-  const selectedService = bookingDraft.service || INITIAL_SERVICES[1];
-  const selectedAddress = bookingDraft.address || addresses[0];
-  const selectedDate = bookingDraft.date || new Date().toISOString().split('T')[0];
-  const selectedTimeSlot = bookingDraft.timeSlot || timeSlots[0].time;
-  const selectedAddons = bookingDraft.addons || [];
-  const appliedCoupon = bookingDraft.couponCode;
-  const paymentMethod = bookingDraft.paymentMethod || 'UPI';
+  // 8. Add-On Services
+  const [selectedAddonIds, setSelectedAddonIds] = useState([]);
 
-  // Price Calculations
-  const basePrice = selectedService?.price || 0;
-  const addonsTotal = selectedAddons.reduce((acc, curr) => acc + curr.price, 0);
+  // 9. Special Customer Instructions
+  const [specialInstructions, setSpecialInstructions] = useState('');
 
-  let discountAmount = 0;
-  if (appliedCoupon === 'FIRSTWASH') discountAmount = 150;
-  else if (appliedCoupon === 'SAVE10') discountAmount = Math.min(200, Math.round((basePrice + addonsTotal) * 0.1));
-  else if (appliedCoupon === 'WEEKEND20') discountAmount = Math.min(300, Math.round((basePrice + addonsTotal) * 0.2));
-
-  const taxAmount = Math.round((basePrice + addonsTotal - discountAmount) * 0.05); // 5% eco tax
-  const finalAmount = Math.max(0, basePrice + addonsTotal - discountAmount + taxAmount);
-
-  const [couponInput, setCouponInput] = useState('');
-  const [createdBooking, setCreatedBooking] = useState(null);
+  // 10. Coupons & Payment Method
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('UPI (Google Pay)');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const steps = [
-    { num: 1, name: 'Vehicle' },
-    { num: 2, name: 'Service' },
-    { num: 3, name: 'Location' },
-    { num: 4, name: 'Schedule' },
-    { num: 5, name: 'Add-ons' },
-    { num: 6, name: 'Payment' }
-  ];
+  // Photo handlers
+  const handlePhotoSelect = (slotName, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleNextStep = () => {
-    if (currentStep === 1 && !selectedVehicle) {
-      addToast('Please select a vehicle or add a new vehicle', 'warning');
+    if (!file.type.startsWith('image/')) {
+      addToast('Please upload a valid image file (JPEG, PNG, WEBP)', 'warning');
       return;
     }
-    if (currentStep === 2 && !selectedService) {
-      addToast('Please select a washing service', 'warning');
+
+    if (file.size > 10 * 1024 * 1024) {
+      addToast('File size must be under 10MB', 'warning');
       return;
     }
-    if (currentStep === 3 && !selectedAddress) {
-      addToast('Please select a service address', 'warning');
-      return;
-    }
-    setCurrentStep(prev => prev + 1);
+
+    const previewUrl = URL.createObjectURL(file);
+    setPhotos(prev => ({
+      ...prev,
+      [slotName]: { file, preview: previewUrl, url: null }
+    }));
+
+    addToast(`${slotName.toUpperCase()} photo selected`, 'info');
   };
 
-  const handlePrevStep = () => {
-    if (currentStep > 1) setCurrentStep(prev => prev - 1);
+  const removePhotoSlot = (slotName) => {
+    setPhotos(prev => ({
+      ...prev,
+      [slotName]: null
+    }));
   };
 
-  const handleApplyCoupon = (codeToApply) => {
-    const code = codeToApply || couponInput.toUpperCase();
-    const couponObj = INITIAL_COUPONS.find(c => c.code === code);
-    if (!couponObj) {
-      addToast('Invalid coupon code. Try FIRSTWASH or SAVE10.', 'error');
+  // GPS Geolocation Handler
+  const handleGetLiveLocation = () => {
+    if (!navigator.geolocation) {
+      addToast('Geolocation is not supported by your browser', 'error');
       return;
     }
-    setBookingDraft(prev => ({ ...prev, couponCode: code }));
-    addToast(`Coupon ${code} applied successfully!`, 'success');
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setAddressData(prev => ({
+          ...prev,
+          latitude: parseFloat(latitude.toFixed(6)),
+          longitude: parseFloat(longitude.toFixed(6))
+        }));
+        setIsLocating(false);
+        setLocationConfirmed(true);
+        addToast(`GPS Coordinates detected: ${latitude.toFixed(4)}° N, ${longitude.toFixed(4)}° E`, 'success');
+      },
+      (err) => {
+        setIsLocating(false);
+        console.warn('Geolocation error:', err);
+        addToast('Could not fetch GPS automatically. Please enter address manually.', 'warning');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
-  const handleAddonToggle = (addon) => {
-    const exists = selectedAddons.some(a => a.id === addon.id);
-    let updated;
-    if (exists) {
-      updated = selectedAddons.filter(a => a.id !== addon.id);
+  // Toggle Addon
+  const toggleAddon = (addonId) => {
+    setSelectedAddonIds(prev =>
+      prev.includes(addonId) ? prev.filter(id => id !== addonId) : [...prev, addonId]
+    );
+  };
+
+  // Pricing Calculations
+  const basePrice = selectedService ? Number(selectedService.price) : 499;
+
+  const addonsTotal = useMemo(() => {
+    return selectedAddonIds.reduce((sum, id) => {
+      const found = availableAddons.find(a => a.id === id);
+      return sum + (found ? Number(found.price) : 0);
+    }, 0);
+  }, [selectedAddonIds, availableAddons]);
+
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.type === 'fixed') {
+      return Number(appliedCoupon.discount || appliedCoupon.value || 50);
+    }
+    if (appliedCoupon.type === 'percent' || appliedCoupon.type === 'percentage') {
+      const pct = Number(appliedCoupon.discount || appliedCoupon.value || 10);
+      return Math.round((basePrice + addonsTotal) * (pct / 100));
+    }
+    return 50;
+  }, [appliedCoupon, basePrice, addonsTotal]);
+
+  const taxAmount = useMemo(() => {
+    const taxable = Math.max(0, basePrice + addonsTotal - discountAmount);
+    return Math.round(taxable * 0.05); // 5% GST on consumables
+  }, [basePrice, addonsTotal, discountAmount]);
+
+  const finalAmount = useMemo(() => {
+    return Math.max(0, basePrice + addonsTotal - discountAmount + taxAmount);
+  }, [basePrice, addonsTotal, discountAmount, taxAmount]);
+
+  // Handle Apply Coupon
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    if (!couponCode.trim()) {
+      addToast('Please enter a coupon code', 'warning');
+      return;
+    }
+    const clean = couponCode.trim().toUpperCase();
+    const found = INITIAL_COUPONS.find(c => c.code.toUpperCase() === clean);
+    if (found) {
+      setAppliedCoupon(found);
+      addToast(`Coupon "${clean}" applied successfully!`, 'success');
     } else {
-      updated = [...selectedAddons, addon];
+      addToast(`Invalid coupon "${clean}". Try "FIRSTWASH" or "SUPER50".`, 'error');
     }
-    setBookingDraft(prev => ({ ...prev, addons: updated }));
   };
 
-  const handleSaveNewVehicle = (e) => {
+  // AI Vehicle Smart Suggestions
+  const smartSuggestions = useMemo(() => {
+    const list = [];
+    const vType = vehicleData.type.toLowerCase();
+    const vCond = vehicleCondition.toLowerCase();
+
+    if (vCond.includes('mud') || vCond.includes('heavy')) {
+      list.push('High-pressure underbody mud blast recommended to prevent suspension rust.');
+    }
+    if (vType === 'suv' || vType === 'sedan') {
+      list.push('Ceramic Gloss Coating add-on will protect your vehicle clearcoat from road grime for up to 30 days.');
+    }
+    if (vType === 'bike') {
+      list.push('Chain degreasing and chain lube is included with the bike care wash package.');
+    }
+    list.push('Our specialist carries pure demineralized water for spotless drying.');
+    return list;
+  }, [vehicleData.type, vehicleCondition]);
+
+  // SUBMIT BOOKING
+  const handleConfirmBooking = async (e) => {
     e.preventDefault();
-    if (!newVehData.brand || !newVehData.model || !newVehData.regNumber) {
-      addToast('Please fill all vehicle details', 'warning');
+
+    if (!selectedService) {
+      addToast('Please select a wash service package', 'error');
       return;
     }
-    const added = addVehicle(newVehData);
-    setBookingDraft(prev => ({ ...prev, vehicle: added }));
-    setShowAddVehModal(false);
-    addToast('Vehicle added successfully!', 'success');
-  };
-
-  const handleSaveNewAddress = (e) => {
-    e.preventDefault();
-    if (!newAddrData.house || !newAddrData.area) {
-      addToast('Please fill house number and area', 'warning');
+    if (!vehicleData.regNumber || !vehicleData.brand) {
+      addToast('Please provide your vehicle make and registration number', 'error');
       return;
     }
-    const added = addAddress(newAddrData);
-    setBookingDraft(prev => ({ ...prev, address: added }));
-    setShowAddAddrModal(false);
-    addToast('Address added successfully!', 'success');
-  };
-
-  const handleConfirmBooking = async () => {
-    if (!selectedService || !selectedVehicle || !selectedAddress) {
-      addToast('Please complete all selection steps before confirming', 'warning');
+    if (!addressData.house || !addressData.area) {
+      addToast('Please provide your complete doorstep address', 'error');
+      return;
+    }
+    if (!selectedDate || !selectedTimeSlot) {
+      addToast('Please select a service date and time slot', 'error');
       return;
     }
 
     setIsSubmitting(true);
+
     try {
-      const newB = await addBooking({
-        service: selectedService,
+      const uploadedPhotoList = [];
+      const photoSlots = [
+        { slot: 'front', type: 'FRONT' },
+        { slot: 'back', type: 'BACK' },
+        { slot: 'left', type: 'LEFT' },
+        { slot: 'right', type: 'RIGHT' },
+        { slot: 'additional', type: 'ADDITIONAL' }
+      ];
+
+      for (const item of photoSlots) {
+        const pObj = photos[item.slot];
+        if (pObj && pObj.file) {
+          try {
+            const upRes = await bookingService.uploadPhoto(pObj.file, item.type);
+            if (upRes && upRes.fileUrl) {
+              uploadedPhotoList.push({
+                photoType: item.type,
+                fileUrl: upRes.fileUrl
+              });
+            }
+          } catch (upErr) {
+            console.warn(`Photo upload failed for ${item.type}:`, upErr);
+            uploadedPhotoList.push({
+              photoType: item.type,
+              fileUrl: pObj.preview
+            });
+          }
+        }
+      }
+
+      const bookingPayload = {
         serviceId: selectedService.id,
-        vehicle: selectedVehicle,
-        vehicleId: selectedVehicle.id,
-        address: selectedAddress,
-        addressId: selectedAddress.id,
         date: selectedDate,
         timeSlot: selectedTimeSlot,
-        addons: selectedAddons,
-        couponApplied: appliedCoupon,
-        basePrice,
-        addonsTotal,
-        discountAmount,
-        taxAmount,
-        finalAmount,
-        paymentMethod
-      });
-      setCreatedBooking(newB);
-      setCurrentStep(7); // Success screen
-      addToast(`Booking #${newB.bookingNumber || newB.id} Confirmed! Placed in database.`, 'success');
+
+        customerName: customerInfo.fullName,
+        customerPhone: customerInfo.phone,
+        customerEmail: customerInfo.email,
+
+        vehicleType: vehicleData.type,
+        vehicleBrand: vehicleData.brand,
+        vehicleModel: vehicleData.model,
+        vehicleRegNumber: vehicleData.regNumber,
+        vehicleColor: vehicleData.color,
+
+        vehicleCondition: vehicleCondition,
+        conditionNotes: conditionNotes,
+        specialInstructions: specialInstructions,
+
+        photos: uploadedPhotoList,
+
+        fullAddress: `${addressData.house}, ${addressData.street}`,
+        landmark: addressData.landmark,
+        city: addressData.city,
+        state: addressData.state,
+        pincode: addressData.pincode,
+        latitude: addressData.latitude,
+        longitude: addressData.longitude,
+
+        addonIds: selectedAddonIds,
+        couponCode: appliedCoupon ? appliedCoupon.code : null,
+        paymentMethod: paymentMethod
+      };
+
+      const created = await addBooking(bookingPayload);
+      addToast(`Booking #${created.bookingNumber || created.id} confirmed and saved to database!`, 'success');
+      navigate(`/booking/success/${created.id || created.bookingNumber}`);
     } catch (err) {
-      console.error('Booking submission failed:', err);
-      addToast(`Booking failed: ${err.message || 'Server error'}`, 'error');
+      console.error('Booking creation error:', err);
+      addToast(`Booking failed: ${err.message || 'Server error. Please try again.'}`, 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (loadingService) {
+    return (
+      <div className="max-w-4xl mx-auto py-8 space-y-6">
+        <CardSkeleton />
+      </div>
+    );
+  }
+
+  const srv = selectedService || INITIAL_SERVICES[1];
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-16">
-      {/* Step Progress Indicator Header */}
-      {currentStep < 7 && (
-        <div className="glass-panel p-4 rounded-2xl border border-slate-800">
-          <div className="flex items-center justify-between overflow-x-auto gap-2 pb-1 scrollbar-none">
-            {steps.map((s) => (
-              <div key={s.num} className="flex items-center gap-2 shrink-0">
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    s.num === currentStep
-                      ? 'bg-cyan-500 text-slate-950 ring-4 ring-cyan-500/20 shadow-md'
-                      : s.num < currentStep
-                      ? 'bg-emerald-500 text-slate-950'
-                      : 'bg-slate-800 text-slate-400'
-                  }`}
-                >
-                  {s.num < currentStep ? <Check className="w-4 h-4" /> : s.num}
-                </div>
-                <span className={`text-xs font-semibold ${s.num === currentStep ? 'text-white' : 'text-slate-400'}`}>
-                  {s.name}
+    <div className="max-w-4xl mx-auto space-y-6 pb-24 animate-fadeIn">
+      {/* 1. SELECTED SERVICE HERO BANNER */}
+      <div className="bg-white rounded-3xl overflow-hidden border border-[#E6ECF5] shadow-xs relative">
+        <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gradient-to-r from-white via-[#F8FAFC] to-[#F0F6FF]">
+          <img
+            src={srv.image || srv.image_url}
+            alt={srv.name}
+            className="w-full sm:w-48 h-36 rounded-2xl object-cover border border-[#E6ECF5] shadow-sm shrink-0"
+          />
+
+          <div className="flex-1 space-y-2 text-center sm:text-left">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <span className="bg-[#F0F6FF] text-[#1264F5] border border-[#BFDBFE] text-[10px] uppercase tracking-wider font-extrabold px-2.5 py-0.5 rounded-full">
+                Selected Package
+              </span>
+              {srv.badge && (
+                <span className="bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A] text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full">
+                  {srv.badge}
                 </span>
-                {s.num < 6 && <ChevronRight className="w-3.5 h-3.5 text-slate-700" />}
-              </div>
-            ))}
+              )}
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-[#10213F]">{srv.name}</h1>
+            <p className="text-xs text-[#64748B] line-clamp-2 leading-relaxed">{srv.description}</p>
+
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-1 text-xs text-[#64748B]">
+              <span className="flex items-center gap-1.5 text-[#10213F] font-bold bg-white px-2.5 py-1 rounded-lg border border-[#E6ECF5]">
+                <Clock className="w-3.5 h-3.5 text-[#1264F5]" /> {srv.duration || `${srv.duration_minutes || 30} mins`}
+              </span>
+              <span className="flex items-center gap-1 text-[#10213F] font-extrabold text-sm">
+                Base: <strong className="text-[#1264F5] text-lg">₹{srv.price}</strong>
+                {(srv.originalPrice || srv.original_price) && (
+                  <span className="text-xs text-[#94A3B8] line-through ml-1">₹{srv.originalPrice || srv.original_price}</span>
+                )}
+              </span>
+            </div>
           </div>
         </div>
-      )}
 
-      {/* STEP 1: SELECT VEHICLE */}
-      {currentStep === 1 && (
-        <div className="space-y-4 animate-fadeIn">
-          <div className="flex items-center justify-between">
+        {/* Included Features Strip */}
+        {(srv.included || srv.included_json) && (
+          <div className="bg-[#F8FAFC] border-t border-[#E6ECF5] px-6 py-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-[#64748B]">
+            <span className="font-bold text-[#10213F] flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A]" /> Includes:
+            </span>
+            {(srv.included || srv.included_json).slice(0, 4).map((inc, i) => (
+              <span key={i} className="flex items-center gap-1">
+                • {inc}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleConfirmBooking} className="space-y-6">
+        {/* 2. CUSTOMER INFORMATION */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#E6ECF5] pb-3">
             <div>
-              <h2 className="text-xl font-extrabold text-white">Select Vehicle</h2>
-              <p className="text-xs text-slate-400">Choose vehicle for doorstep wash or add a new one</p>
+              <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+                1. Customer Information
+              </h2>
+              <p className="text-xs text-[#64748B]">Contact details for doorstep wash confirmation</p>
             </div>
-
-            <Button
-              onClick={() => setShowAddVehModal(true)}
-              variant="outline"
-              size="sm"
-              icon={Plus}
-            >
-              Add Vehicle
-            </Button>
+            {user && (
+              <span className="text-[11px] bg-[#F0F6FF] text-[#1264F5] border border-[#BFDBFE] px-2.5 py-1 rounded-full font-bold">
+                Auto-filled from Account
+              </span>
+            )}
           </div>
 
-          <div className="space-y-3">
-            {vehicles.map((v) => (
-              <VehicleCard
-                key={v.id}
-                vehicle={v}
-                isSelected={selectedVehicle?.id === v.id}
-                onSelect={() => setBookingDraft(prev => ({ ...prev, vehicle: v }))}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* STEP 2: SELECT SERVICE */}
-      {currentStep === 2 && (
-        <div className="space-y-4 animate-fadeIn">
-          <div>
-            <h2 className="text-xl font-extrabold text-white">Select Washing Service</h2>
-            <p className="text-xs text-slate-400">Choose package suitable for your {selectedVehicle?.brand || 'vehicle'}</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {INITIAL_SERVICES.map((srv) => (
-              <div
-                key={srv.id}
-                onClick={() => setBookingDraft(prev => ({ ...prev, service: srv }))}
-                className={`cursor-pointer rounded-2xl transition-all ${
-                  selectedService?.id === srv.id ? 'ring-2 ring-cyan-500 shadow-xl' : ''
-                }`}
-              >
-                <ServiceCard
-                  service={srv}
-                  onSelect={() => setBookingDraft(prev => ({ ...prev, service: srv }))}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* STEP 3: LOCATION & MAP */}
-      {currentStep === 3 && (
-        <div className="space-y-4 animate-fadeIn">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-extrabold text-white">Select Doorstep Address</h2>
-              <p className="text-xs text-slate-400">Where should our washing technician arrive?</p>
-            </div>
-            <Button onClick={() => setShowAddAddrModal(true)} variant="outline" size="sm" icon={Plus}>
-              Add Address
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {addresses.map((addr) => {
-              const isSelected = selectedAddress?.id === addr.id;
-              return (
-                <div
-                  key={addr.id}
-                  onClick={() => setBookingDraft(prev => ({ ...prev, address: addr }))}
-                  className={`glass-card p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    isSelected ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-800'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={`p-2.5 rounded-xl ${isSelected ? 'bg-cyan-500 text-slate-950' : 'bg-slate-800 text-cyan-400'}`}>
-                      <Building className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm">{addr.label}</span>
-                        {addr.isDefault && <span className="text-[10px] bg-slate-800 text-cyan-400 px-2 py-0.5 rounded-full font-mono">Default</span>}
-                      </div>
-                      <p className="text-xs text-slate-300 mt-1">
-                        {addr.house}, {addr.street}, {addr.area}, {addr.city} – {addr.pincode}
-                      </p>
-                      {addr.landmark && <p className="text-[11px] text-slate-400 mt-0.5">Landmark: {addr.landmark}</p>}
-                    </div>
-                  </div>
-
-                  {isSelected && <CheckCircle2 className="w-5 h-5 text-cyan-400 shrink-0" />}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* MAP PLACEHOLDER */}
-          <div className="glass-card p-4 rounded-2xl border border-slate-800 flex items-center justify-between bg-slate-900/60">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl">
-                <Navigation className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">Live GPS Location Integration Ready</h4>
-                <p className="text-[11px] text-slate-400">Map pin location accuracy within 5 meters.</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => addToast('Fetched current GPS coordinates (12.3051° N, 76.6551° E)', 'info')}
-              className="text-xs font-bold text-cyan-400 hover:underline shrink-0"
-            >
-              Use Current GPS
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: SCHEDULE DATE & TIME */}
-      {currentStep === 4 && (
-        <div className="space-y-5 animate-fadeIn">
-          <div>
-            <h2 className="text-xl font-extrabold text-white">Schedule Wash Date & Time</h2>
-            <p className="text-xs text-slate-400">Technicians available 7 days a week, 7 AM to 8 PM</p>
-          </div>
-
-          {/* Date Picker */}
-          <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
-            <label className="text-xs font-bold text-slate-300 block">Select Date</label>
-            <input
-              type="date"
-              value={selectedDate}
-              min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setBookingDraft(prev => ({ ...prev, date: e.target.value }))}
-              className="w-full bg-slate-900 border border-slate-700 text-slate-100 text-sm rounded-xl p-3 outline-none focus:border-cyan-500"
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Input
+              label="Full Name *"
+              placeholder="e.g. Rahul Sharma"
+              value={customerInfo.fullName}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, fullName: e.target.value })}
+              required
+            />
+            <Input
+              label="Mobile Number *"
+              placeholder="e.g. +91 98765 43210"
+              value={customerInfo.phone}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+              required
+            />
+            <Input
+              label="Email Address *"
+              type="email"
+              placeholder="e.g. rahul@example.com"
+              value={customerInfo.email}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+              required
             />
           </div>
+        </div>
 
-          {/* Time Slots */}
-          <div>
-            <label className="text-xs font-bold text-slate-300 block mb-2.5">Available Time Slots</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {timeSlots.map((slot, idx) => {
-                const isSelected = selectedTimeSlot === slot.time;
+        {/* 3. VEHICLE INFORMATION */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E6ECF5] pb-3">
+            <div>
+              <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+                2. Vehicle Information
+              </h2>
+              <p className="text-xs text-[#64748B]">Specify the vehicle that needs washing</p>
+            </div>
+
+            {vehicles.length > 0 && (
+              <div className="flex items-center gap-1.5 bg-[#F8FAFC] p-1 rounded-xl border border-[#E6ECF5]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVehicleSelectionMode('saved');
+                    if (vehicles[0]) handleSelectSavedVehicle(vehicles[0].id);
+                  }}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                    vehicleSelectionMode === 'saved' ? 'bg-[#1264F5] text-white shadow-sm' : 'text-[#64748B] hover:text-[#10213F]'
+                  }`}
+                >
+                  My Saved Vehicles ({vehicles.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVehicleSelectionMode('new')}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-colors cursor-pointer ${
+                    vehicleSelectionMode === 'new' ? 'bg-[#1264F5] text-white shadow-sm' : 'text-[#64748B] hover:text-[#10213F]'
+                  }`}
+                >
+                  Enter New
+                </button>
+              </div>
+            )}
+          </div>
+
+          {vehicleSelectionMode === 'saved' && vehicles.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2">
+              {vehicles.map((v) => {
+                const isSelected = selectedSavedVehicleId === v.id;
                 return (
-                  <button
-                    key={idx}
-                    disabled={!slot.available}
-                    onClick={() => setBookingDraft(prev => ({ ...prev, timeSlot: slot.time }))}
-                    className={`p-3 rounded-2xl border text-center transition-all ${
+                  <div
+                    key={v.id}
+                    onClick={() => handleSelectSavedVehicle(v.id)}
+                    className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                       isSelected
-                        ? 'border-cyan-500 bg-cyan-500/15 text-cyan-300 font-bold shadow-md'
-                        : slot.available
-                        ? 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800'
-                        : 'border-slate-800/40 bg-slate-950 text-slate-600 cursor-not-allowed opacity-50'
+                        ? 'border-[#1264F5] bg-[#F0F6FF] text-[#10213F] shadow-sm'
+                        : 'border-[#E6ECF5] bg-[#F8FAFC] text-[#64748B] hover:bg-white hover:border-[#CBD5E1]'
                     }`}
                   >
-                    <span className="text-xs font-semibold block">{slot.time}</span>
-                    <span className={`text-[10px] mt-1 block font-mono ${slot.available ? (isSelected ? 'text-cyan-300' : 'text-emerald-400') : 'text-rose-400'}`}>
-                      {slot.available ? 'Available' : 'Slot Full'}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-xl ${isSelected ? 'bg-[#1264F5] text-white' : 'bg-white border border-[#E6ECF5] text-[#1264F5]'}`}>
+                        {v.type === 'bike' || v.vehicle_type === 'bike' ? <Bike className="w-4 h-4" /> : <Car className="w-4 h-4" />}
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold block text-[#10213F]">{v.brand} {v.model}</span>
+                        <span className="text-[11px] font-mono text-[#64748B]">{v.regNumber || v.registration_number} • {v.color}</span>
+                      </div>
+                    </div>
+                    {isSelected && <Check className="w-4 h-4 text-[#1264F5] stroke-[3]" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Select
+              label="Vehicle Type *"
+              value={vehicleData.type}
+              onChange={(e) => setVehicleData({ ...vehicleData, type: e.target.value })}
+              options={[
+                { value: 'bike', label: 'Bike' },
+                { value: 'scooter', label: 'Scooter' },
+                { value: 'hatchback', label: 'Hatchback' },
+                { value: 'sedan', label: 'Sedan' },
+                { value: 'suv', label: 'SUV' },
+                { value: 'other', label: 'Other' }
+              ]}
+            />
+            <Input
+              label="Vehicle Brand / Make *"
+              placeholder="e.g. Honda, Hyundai, Tata, RE"
+              value={vehicleData.brand}
+              onChange={(e) => setVehicleData({ ...vehicleData, brand: e.target.value })}
+              required
+            />
+            <Input
+              label="Vehicle Model *"
+              placeholder="e.g. City ZX, Creta, Nexon, Classic 350"
+              value={vehicleData.model}
+              onChange={(e) => setVehicleData({ ...vehicleData, model: e.target.value })}
+              required
+            />
+            <Input
+              label="Vehicle Registration Number *"
+              placeholder="e.g. KA-09-MA-7821"
+              value={vehicleData.regNumber}
+              onChange={(e) => setVehicleData({ ...vehicleData, regNumber: e.target.value.toUpperCase() })}
+              required
+            />
+            <Input
+              label="Vehicle Color *"
+              placeholder="e.g. Platinum White, Stealth Black"
+              value={vehicleData.color}
+              onChange={(e) => setVehicleData({ ...vehicleData, color: e.target.value })}
+              required
+            />
+          </div>
+        </div>
+
+        {/* 4. VEHICLE CONDITION & PROBLEM NOTES */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="border-b border-[#E6ECF5] pb-3">
+            <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+              3. Vehicle Condition & Problem Notes
+            </h2>
+            <p className="text-xs text-[#64748B]">Helps our wash specialist bring the right equipment and foam pressure</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#10213F] block mb-2">Select Current Vehicle Condition *</label>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              {[
+                { id: 'Light Dust', label: 'Light Dust', emoji: '✨' },
+                { id: 'Normal Dirt', label: 'Normal Dirt', emoji: '🚗' },
+                { id: 'Heavy Dirt', label: 'Heavy Dirt', emoji: '🌧️' },
+                { id: 'Muddy', label: 'Muddy', emoji: '🟤' },
+                { id: 'Other', label: 'Other', emoji: '⚙️' }
+              ].map((cond) => {
+                const isSelected = vehicleCondition === cond.id;
+                return (
+                  <button
+                    key={cond.id}
+                    type="button"
+                    onClick={() => setVehicleCondition(cond.id)}
+                    className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                      isSelected
+                        ? 'border-[#1264F5] bg-[#F0F6FF] text-[#1264F5] font-bold shadow-sm'
+                        : 'border-[#E6ECF5] bg-[#F8FAFC] text-[#64748B] hover:border-[#CBD5E1] hover:text-[#10213F]'
+                    }`}
+                  >
+                    <span className="text-lg">{cond.emoji}</span>
+                    <span className="text-xs">{cond.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-        </div>
-      )}
 
-      {/* STEP 5: ADD-ONS & COUPON */}
-      {currentStep === 5 && (
-        <div className="space-y-5 animate-fadeIn">
           <div>
-            <h2 className="text-xl font-extrabold text-white">Enhance Your Wash (Optional Add-ons)</h2>
-            <p className="text-xs text-slate-400">Select extra polish or sanitization services</p>
+            <label className="text-xs font-bold text-[#10213F] block mb-1">
+              Additional Vehicle Condition / Problem Notes (Optional)
+            </label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Stains on back seat fabric, tree sap on roof, brake dust on alloy rims..."
+              value={conditionNotes}
+              onChange={(e) => setConditionNotes(e.target.value)}
+              className="w-full bg-[#F8FAFC] border border-[#E6ECF5] text-xs text-[#10213F] rounded-2xl p-3 outline-none focus:border-[#1264F5] focus:bg-white transition-colors placeholder:text-[#94A3B8]"
+            />
+          </div>
+        </div>
+
+        {/* 5. VEHICLE PHOTOS UPLOAD */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="border-b border-[#E6ECF5] pb-3">
+            <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+              <Camera className="w-4 h-4 text-[#1264F5]" /> 4. Upload Vehicle Photos (Optional but Recommended)
+            </h2>
+            <p className="text-xs text-[#64748B]">Upload photos of your vehicle for accurate pre-inspection (Max 10MB each)</p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {[
+              { slot: 'front', label: 'Front' },
+              { slot: 'back', label: 'Back' },
+              { slot: 'left', label: 'Left Side' },
+              { slot: 'right', label: 'Right Side' },
+              { slot: 'additional', label: 'Additional' }
+            ].map(({ slot, label }) => {
+              const photoObj = photos[slot];
+              return (
+                <div key={slot} className="space-y-1.5 text-center">
+                  <span className="text-[11px] font-bold text-[#10213F] block">{label}</span>
+                  
+                  {photoObj?.preview ? (
+                    <div className="relative w-full h-28 rounded-2xl border border-[#1264F5] overflow-hidden group shadow-sm">
+                      <img src={photoObj.preview} alt={label} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-[#10213F]/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => removePhotoSlot(slot)}
+                          className="bg-[#EF4444] text-white p-1.5 rounded-full hover:bg-[#DC2626] transition-colors shadow-md cursor-pointer"
+                          title="Remove photo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <span className="absolute bottom-1 right-1 bg-[#10213F]/80 text-[#16A34A] text-[9px] font-mono px-1.5 py-0.5 rounded font-bold">
+                        Ready
+                      </span>
+                    </div>
+                  ) : (
+                    <label className="w-full h-28 rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] hover:bg-white hover:border-[#1264F5] flex flex-col items-center justify-center text-[#64748B] hover:text-[#1264F5] cursor-pointer transition-all">
+                      <Camera className="w-6 h-6 mb-1 text-[#94A3B8]" />
+                      <span className="text-[10px] font-bold">+ Upload</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handlePhotoSelect(slot, e)}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 6. DOORSTEP LOCATION & GPS MAP */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E6ECF5] pb-3">
+            <div>
+              <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#1264F5]" /> 5. Doorstep Service Location
+              </h2>
+              <p className="text-xs text-[#64748B]">Where should our water-equipped wash specialist arrive?</p>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleGetLiveLocation}
+              variant="primary"
+              size="sm"
+              icon={Navigation}
+              isLoading={isLocating}
+              className="shrink-0"
+            >
+              Share Current Location
+            </Button>
+          </div>
+
+          {/* Coordinates Bar */}
+          <div className="bg-[#F8FAFC] border border-[#E6ECF5] p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-[#F0F6FF] text-[#1264F5] rounded-xl shrink-0">
+                <Compass className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-bold text-[#10213F] block">GPS Map Pin Selected</span>
+                <span className="text-[#64748B] font-mono text-[11px]">
+                  Latitude: {addressData.latitude}° N • Longitude: {addressData.longitude}° E
+                </span>
+              </div>
+            </div>
+
+            <a
+              href={`https://www.google.com/maps?q=${addressData.latitude},${addressData.longitude}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[#1264F5] hover:underline font-bold text-xs flex items-center gap-1 shrink-0"
+            >
+              Preview on Google Maps <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
+
+          {/* Address Inputs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Flat / House / Building Number *"
+              placeholder="e.g. No. 42, 3rd Floor"
+              value={addressData.house}
+              onChange={(e) => setAddressData({ ...addressData, house: e.target.value })}
+              required
+            />
+            <Input
+              label="Street / Layout Name"
+              placeholder="e.g. Gokulam 2nd Stage"
+              value={addressData.street}
+              onChange={(e) => setAddressData({ ...addressData, street: e.target.value })}
+            />
+            <Input
+              label="Area / Locality *"
+              placeholder="e.g. Vijayanagar, Hebbal"
+              value={addressData.area}
+              onChange={(e) => setAddressData({ ...addressData, area: e.target.value })}
+              required
+            />
+            <Input
+              label="Landmark (Optional)"
+              placeholder="e.g. Near Water Tank, Opposite Tech Park"
+              value={addressData.landmark}
+              onChange={(e) => setAddressData({ ...addressData, landmark: e.target.value })}
+            />
+            <Input
+              label="City"
+              value={addressData.city}
+              onChange={(e) => setAddressData({ ...addressData, city: e.target.value })}
+              required
+            />
+            <Input
+              label="PIN Code"
+              value={addressData.pincode}
+              onChange={(e) => setAddressData({ ...addressData, pincode: e.target.value })}
+              required
+            />
+          </div>
+        </div>
+
+        {/* 7. SCHEDULE DATE & TIME SLOT */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="border-b border-[#E6ECF5] pb-3">
+            <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#1264F5]" /> 6. Select Date & Time Slot
+            </h2>
+            <p className="text-xs text-[#64748B]">Doorstep technicians available 7 days a week, 7 AM to 8 PM</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-bold text-[#10213F] block mb-1.5">Service Date *</label>
+              <input
+                type="date"
+                min={todayStr}
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                required
+                className="w-full bg-[#F8FAFC] border border-[#E6ECF5] text-xs text-[#10213F] rounded-2xl p-3.5 outline-none focus:border-[#1264F5] font-bold"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="text-xs font-bold text-[#10213F] block mb-1.5">Available Time Slots *</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {timeSlots.map((slot, idx) => {
+                  const isSelected = selectedTimeSlot === slot.time;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      disabled={!slot.available}
+                      onClick={() => setSelectedTimeSlot(slot.time)}
+                      className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#1264F5] bg-[#F0F6FF] text-[#1264F5] font-bold shadow-sm'
+                          : slot.available
+                          ? 'border-[#E6ECF5] bg-[#F8FAFC] text-[#10213F] hover:bg-white hover:border-[#CBD5E1]'
+                          : 'border-[#E6ECF5] bg-[#F1F5F9] text-[#94A3B8] cursor-not-allowed opacity-50'
+                      }`}
+                    >
+                      <span className="text-[11px] font-semibold block">{slot.time}</span>
+                      <span className={`text-[9px] mt-0.5 block font-mono ${slot.available ? (isSelected ? 'text-[#1264F5]' : 'text-[#16A34A]') : 'text-[#EF4444]'}`}>
+                        {slot.available ? 'Available' : 'Booked'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 8. ADD-ON SERVICES (FROM DATABASE) */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="border-b border-[#E6ECF5] pb-3">
+            <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#1264F5]" /> 7. Add-On Services (Optional Extras)
+            </h2>
+            <p className="text-xs text-[#64748B]">Enhance your wash package with deep sanitization or wax coating</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {ADD_ONS.map((addon) => {
-              const isAdded = selectedAddons.some(a => a.id === addon.id);
+            {availableAddons.map((addon) => {
+              const isSelected = selectedAddonIds.includes(addon.id);
               return (
                 <div
                   key={addon.id}
-                  onClick={() => handleAddonToggle(addon)}
+                  onClick={() => toggleAddon(addon.id)}
                   className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    isAdded ? 'border-cyan-500 bg-cyan-500/10' : 'border-slate-800 bg-slate-900/60 hover:bg-slate-800'
+                    isSelected
+                      ? 'border-[#1264F5] bg-[#F0F6FF] shadow-sm'
+                      : 'border-[#E6ECF5] bg-[#F8FAFC] hover:bg-white hover:border-[#CBD5E1]'
                   }`}
                 >
-                  <div>
+                  <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-white">{addon.name}</h4>
-                      <span className="text-xs font-extrabold text-cyan-400">+₹{addon.price}</span>
+                      <h4 className="text-xs font-bold text-[#10213F]">{addon.name}</h4>
+                      <span className="text-xs font-black text-[#1264F5]">+₹{addon.price}</span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{addon.description}</p>
+                    <p className="text-[11px] text-[#64748B]">{addon.description}</p>
                   </div>
 
-                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                    isAdded ? 'bg-cyan-500 border-cyan-500 text-slate-950' : 'border-slate-700'
+                  <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 ml-3 ${
+                    isSelected ? 'bg-[#1264F5] border-[#1264F5] text-white' : 'border-[#CBD5E1] bg-white'
                   }`}>
-                    {isAdded && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
                 </div>
               );
             })}
           </div>
-
-          {/* Coupon Section */}
-          <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
-            <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-              <Tag className="w-4 h-4 text-cyan-400" /> Apply Promo Code / Coupon
-            </h4>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter coupon e.g. FIRSTWASH"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-xs text-slate-100 uppercase rounded-xl px-3 py-2.5 outline-none focus:border-cyan-500"
-              />
-              <Button onClick={() => handleApplyCoupon()} variant="primary" size="sm">
-                Apply
-              </Button>
-            </div>
-
-            {appliedCoupon && (
-              <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 p-2.5 rounded-xl text-xs text-emerald-300">
-                <span>Coupon <strong>{appliedCoupon}</strong> Applied! (₹{discountAmount} OFF)</span>
-                <button
-                  onClick={() => setBookingDraft(prev => ({ ...prev, couponCode: '' }))}
-                  className="text-[10px] text-rose-400 font-bold hover:underline"
-                >
-                  Remove
-                </button>
-              </div>
-            )}
-          </div>
         </div>
-      )}
 
-      {/* STEP 6: SUMMARY & PAYMENT */}
-      {currentStep === 6 && (
-        <div className="space-y-5 animate-fadeIn">
-          <div>
-            <h2 className="text-xl font-extrabold text-white">Booking Summary & Payment</h2>
-            <p className="text-xs text-slate-400">Review your doorstep wash details before confirming</p>
+        {/* 9. SPECIAL INSTRUCTIONS */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-3 shadow-xs">
+          <h2 className="text-base font-black text-[#10213F]">
+            8. Special Instructions
+          </h2>
+          <textarea
+            rows={2}
+            placeholder="e.g. Please be careful with the alloy wheels, do not spray water into intake vents..."
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            className="w-full bg-[#F8FAFC] border border-[#E6ECF5] text-xs text-[#10213F] rounded-2xl p-3 outline-none focus:border-[#1264F5] focus:bg-white transition-colors placeholder:text-[#94A3B8]"
+          />
+        </div>
+
+        {/* 10. AI / SMART VEHICLE SUGGESTIONS */}
+        <div className="bg-gradient-to-br from-[#F0F6FF] to-white p-6 rounded-3xl border border-[#BFDBFE] space-y-3 shadow-xs">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-[#1264F5] text-white rounded-xl">
+              <Wand2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-black text-[#10213F] uppercase tracking-wider">
+                Smart Vehicle Suggestions
+              </h3>
+              <p className="text-[11px] text-[#64748B]">Contextual advice generated for your {vehicleData.brand} ({vehicleCondition})</p>
+            </div>
           </div>
 
-          {/* Summary Details Card */}
-          <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3 text-xs">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="text-slate-400 font-medium">Service</span>
-              <span className="font-bold text-white">{selectedService?.name} (₹{basePrice})</span>
+          <div className="space-y-1.5 text-xs text-[#10213F]">
+            {smartSuggestions.map((sugg, i) => (
+              <div key={i} className="flex items-start gap-2 bg-white p-2.5 rounded-xl border border-[#E6ECF5] shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-[#F59E0B] shrink-0 mt-0.5" />
+                <span className="text-[11px] font-medium">{sugg}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-[#94A3B8] italic">
+            * These are smart recommendations and do not automatically add charges to your booking.
+          </p>
+        </div>
+
+        {/* 11. PRICE SUMMARY & PAYMENT */}
+        <div className="bg-white p-6 rounded-3xl border border-[#E6ECF5] space-y-4 shadow-xs">
+          <div className="border-b border-[#E6ECF5] pb-3">
+            <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+              9. Price Summary & Payment Method
+            </h2>
+            <p className="text-xs text-[#64748B]">Calculated strictly using database rates</p>
+          </div>
+
+          {/* Promo Code Input */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter coupon code e.g. FIRSTWASH"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              className="flex-1 bg-[#F8FAFC] border border-[#E6ECF5] text-xs text-[#10213F] uppercase rounded-2xl px-4 py-3 outline-none focus:border-[#1264F5] font-bold"
+            />
+            <Button type="button" onClick={handleApplyCoupon} variant="primary" size="md">
+              Apply
+            </Button>
+          </div>
+
+          {appliedCoupon && (
+            <div className="flex items-center justify-between bg-[#F0FDF4] border border-[#BBF7D0] p-2.5 rounded-xl text-xs text-[#15803D]">
+              <span>Coupon <strong>{appliedCoupon.code}</strong> Applied! (₹{discountAmount} OFF)</span>
+              <button
+                type="button"
+                onClick={() => setAppliedCoupon(null)}
+                className="text-[10px] text-[#EF4444] font-bold hover:underline cursor-pointer"
+              >
+                Remove
+              </button>
             </div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="text-slate-400 font-medium">Vehicle</span>
-              <span className="font-bold text-white">{selectedVehicle?.brand} {selectedVehicle?.model} ({selectedVehicle?.regNumber})</span>
-            </div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="text-slate-400 font-medium">Address</span>
-              <span className="font-bold text-white truncate max-w-xs">{selectedAddress?.area}, {selectedAddress?.city}</span>
-            </div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-              <span className="text-slate-400 font-medium">Schedule</span>
-              <span className="font-bold text-cyan-400">{selectedDate} ({selectedTimeSlot})</span>
+          )}
+
+          {/* Itemized Calculation */}
+          <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E6ECF5] space-y-2 text-xs">
+            <div className="flex justify-between text-[#64748B]">
+              <span>{srv.name} (Base Price)</span>
+              <span className="font-bold text-[#10213F]">₹{basePrice}</span>
             </div>
 
-            {selectedAddons.length > 0 && (
-              <div className="border-b border-slate-800 pb-2.5">
-                <span className="text-slate-400 font-medium block mb-1">Add-ons Selected</span>
-                {selectedAddons.map(a => (
-                  <div key={a.id} className="flex justify-between text-slate-300">
-                    <span>• {a.name}</span>
-                    <span>+₹{a.price}</span>
-                  </div>
-                ))}
+            {selectedAddonIds.length > 0 && (
+              <div className="flex justify-between text-[#64748B]">
+                <span>Add-ons Total ({selectedAddonIds.length} items)</span>
+                <span className="font-bold text-[#1264F5]">+₹{addonsTotal}</span>
               </div>
             )}
 
-            {/* Price Calculations */}
-            <div className="pt-2 space-y-1.5">
-              <div className="flex justify-between text-slate-400">
-                <span>Subtotal</span>
-                <span>₹{basePrice + addonsTotal}</span>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-[#16A34A] font-bold">
+                <span>Promo Discount</span>
+                <span>-₹{discountAmount}</span>
               </div>
-              {discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-400 font-semibold">
-                  <span>Coupon Discount</span>
-                  <span>-₹{discountAmount}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-slate-400">
-                <span>Eco Tax & Materials (5%)</span>
-                <span>+₹{taxAmount}</span>
-              </div>
-              <div className="flex justify-between text-base font-extrabold text-white pt-2 border-t border-slate-700">
-                <span>Final Payable Amount</span>
-                <span className="text-cyan-400">₹{finalAmount}</span>
-              </div>
+            )}
+
+            <div className="flex justify-between text-[#64748B]">
+              <span>Eco Washing Materials & Tax (5%)</span>
+              <span>+₹{taxAmount}</span>
+            </div>
+
+            <div className="pt-2 border-t border-[#E6ECF5] flex justify-between items-center text-sm font-extrabold text-[#10213F]">
+              <span>Final Payable Amount</span>
+              <span className="text-xl font-black text-[#1264F5]">₹{finalAmount}</span>
             </div>
           </div>
 
           {/* Payment Method Selector */}
-          <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-3">
-            <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-              <CreditCard className="w-4 h-4 text-cyan-400" /> Select Payment Method
-            </h4>
-
-            <div className="grid grid-cols-2 gap-2.5">
+          <div>
+            <label className="text-xs font-bold text-[#10213F] block mb-2">Select Payment Method</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
-                { id: 'UPI', label: 'UPI (Google Pay / PhonePe)', icon: '📱' },
-                { id: 'Card', label: 'Credit / Debit Card', icon: '💳' },
-                { id: 'Wallet', label: 'AquaGo Wallet', icon: '👛' },
-                { id: 'Cash After Service', label: 'Cash After Wash', icon: '💵' },
+                { id: 'UPI (Google Pay)', label: 'UPI / GPay', icon: '📱' },
+                { id: 'Credit / Debit Card', label: 'Card', icon: '💳' },
+                { id: 'AquaGo Wallet', label: 'Wallet', icon: '👛' },
+                { id: 'Cash After Service', label: 'Cash After Wash', icon: '💵' }
               ].map((pm) => (
                 <button
                   key={pm.id}
                   type="button"
-                  onClick={() => setBookingDraft(prev => ({ ...prev, paymentMethod: pm.id }))}
-                  className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                  onClick={() => setPaymentMethod(pm.id)}
+                  className={`p-3 rounded-2xl border text-center text-xs transition-all cursor-pointer ${
                     paymentMethod === pm.id
-                      ? 'border-cyan-500 bg-cyan-500/10 font-bold text-white'
-                      : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-white'
+                      ? 'border-[#1264F5] bg-[#F0F6FF] font-bold text-[#1264F5] shadow-xs'
+                      : 'border-[#E6ECF5] bg-[#F8FAFC] text-[#64748B] hover:text-[#10213F] hover:bg-white'
                   }`}
                 >
-                  <span className="mr-1.5">{pm.icon}</span> {pm.label}
+                  <span className="text-base block mb-1">{pm.icon}</span>
+                  <span>{pm.label}</span>
                 </button>
               ))}
             </div>
           </div>
+        </div>
 
+        {/* 12. CONFIRM BOOKING SUBMISSION BUTTON */}
+        <div className="pt-2">
           <Button
-            onClick={handleConfirmBooking}
+            type="submit"
             variant="primary"
             size="lg"
             fullWidth
             isLoading={isSubmitting}
             icon={CheckCircle2}
-            className="shadow-xl shadow-cyan-500/25"
+            className="py-4 text-base font-black shadow-lg shadow-[#1264F5]/20 cursor-pointer"
           >
             Confirm Booking (₹{finalAmount})
           </Button>
+          <p className="text-center text-[11px] text-[#94A3B8] mt-2">
+            By clicking Confirm Booking, your request is submitted for supervisor verification.
+          </p>
         </div>
-      )}
-
-      {/* STEP 7: BOOKING SUCCESS CONFIRMATION */}
-      {currentStep === 7 && createdBooking && (
-        <div className="glass-card p-8 rounded-3xl border border-cyan-500/40 text-center space-y-6 animate-fadeIn">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center mx-auto shadow-xl shadow-emerald-950/40 animate-bounce">
-            <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
-          </div>
-
-          <div>
-            <span className="text-xs uppercase font-mono tracking-widest text-emerald-400 font-bold">Success!</span>
-            <h2 className="text-2xl font-extrabold text-white mt-1">Booking Confirmed</h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Booking ID: <span className="font-mono font-bold text-cyan-400">{createdBooking.id}</span>
-            </p>
-          </div>
-
-          <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 max-w-md mx-auto text-xs text-left space-y-2">
-            <div className="flex justify-between"><span className="text-slate-400">Service:</span> <span className="font-bold text-white">{createdBooking.service.name}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Vehicle:</span> <span className="font-bold text-white">{createdBooking.vehicle.brand} {createdBooking.vehicle.model}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Date & Slot:</span> <span className="font-bold text-cyan-400">{createdBooking.date} ({createdBooking.timeSlot})</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">Amount Paid:</span> <span className="font-bold text-white">₹{createdBooking.finalAmount} ({createdBooking.paymentMethod})</span></div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Button onClick={() => navigate('/bookings')} variant="primary" size="md" icon={Calendar}>
-              View My Bookings
-            </Button>
-            <Button onClick={() => navigate('/')} variant="secondary" size="md">
-              Back to Home
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Navigation Buttons for Steps 1-6 */}
-      {currentStep < 7 && (
-        <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-          <Button
-            onClick={handlePrevStep}
-            variant="ghost"
-            size="md"
-            isDisabled={currentStep === 1}
-            icon={ChevronLeft}
-          >
-            Back
-          </Button>
-
-          {currentStep < 6 && (
-            <Button
-              onClick={handleNextStep}
-              variant="primary"
-              size="md"
-              icon={ChevronRight}
-            >
-              Continue to {steps[currentStep]?.name || 'Next'}
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* MODAL: ADD VEHICLE */}
-      <Modal isOpen={showAddVehModal} onClose={() => setShowAddVehModal(false)} title="Add New Vehicle">
-        <form onSubmit={handleSaveNewVehicle} className="space-y-3">
-          <Select
-            label="Vehicle Category"
-            value={newVehData.type}
-            onChange={(e) => setNewVehData({ ...newVehData, type: e.target.value })}
-            options={VEHICLE_CATEGORIES.map(c => ({ value: c.id, label: c.name }))}
-          />
-          <Input label="Brand / Make" placeholder="e.g. Honda" value={newVehData.brand} onChange={(e) => setNewVehData({ ...newVehData, brand: e.target.value })} required />
-          <Input label="Model" placeholder="e.g. City ZX" value={newVehData.model} onChange={(e) => setNewVehData({ ...newVehData, model: e.target.value })} required />
-          <Input label="Registration Number" placeholder="e.g. KA-09-MA-7821" value={newVehData.regNumber} onChange={(e) => setNewVehData({ ...newVehData, regNumber: e.target.value })} required />
-          <Input label="Color" placeholder="e.g. White" value={newVehData.color} onChange={(e) => setNewVehData({ ...newVehData, color: e.target.value })} />
-          
-          <div className="pt-2 flex gap-2">
-            <Button onClick={() => setShowAddVehModal(false)} variant="secondary" fullWidth type="button">Cancel</Button>
-            <Button variant="primary" fullWidth type="submit">Save Vehicle</Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* MODAL: ADD ADDRESS */}
-      <Modal isOpen={showAddAddrModal} onClose={() => setShowAddAddrModal(false)} title="Add Doorstep Address">
-        <form onSubmit={handleSaveNewAddress} className="space-y-3">
-          <Select
-            label="Label"
-            value={newAddrData.label}
-            onChange={(e) => setNewAddrData({ ...newAddrData, label: e.target.value })}
-            options={[{ value: 'Home', label: 'Home' }, { value: 'Office', label: 'Office' }, { value: 'Other', label: 'Other' }]}
-          />
-          <Input label="House / Flat / Building No." placeholder="e.g. No. 42, 3rd Floor" value={newAddrData.house} onChange={(e) => setNewAddrData({ ...newAddrData, house: e.target.value })} required />
-          <Input label="Street / Layout" placeholder="e.g. Gokulam 2nd Stage" value={newAddrData.street} onChange={(e) => setNewAddrData({ ...newAddrData, street: e.target.value })} />
-          <Input label="Area" placeholder="e.g. Vijayanagar" value={newAddrData.area} onChange={(e) => setNewAddrData({ ...newAddrData, area: e.target.value })} required />
-          <Input label="Landmark" placeholder="e.g. Near Water Tank" value={newAddrData.landmark} onChange={(e) => setNewAddrData({ ...newAddrData, landmark: e.target.value })} />
-          <Input label="City" value={newAddrData.city} onChange={(e) => setNewAddrData({ ...newAddrData, city: e.target.value })} />
-          <Input label="PIN Code" value={newAddrData.pincode} onChange={(e) => setNewAddrData({ ...newAddrData, pincode: e.target.value })} />
-          
-          <div className="pt-2 flex gap-2">
-            <Button onClick={() => setShowAddAddrModal(false)} variant="secondary" fullWidth type="button">Cancel</Button>
-            <Button variant="primary" fullWidth type="submit">Save Address</Button>
-          </div>
-        </form>
-      </Modal>
+      </form>
     </div>
   );
 };

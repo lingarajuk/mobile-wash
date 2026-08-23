@@ -23,24 +23,24 @@ export const MyBookingsPage = () => {
   });
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-16 animate-fadeIn max-w-[1400px] mx-auto">
       {/* Header & Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white">My Vehicle Wash Bookings</h1>
-          <p className="text-xs text-slate-400">Track live wash status and service history</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#10213F]">My Vehicle Wash Bookings</h1>
+          <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Track live wash status and service history</p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-1 rounded-2xl overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1 bg-white border border-[#E6ECF5] p-1 rounded-2xl overflow-x-auto scrollbar-none shadow-xs">
           {['all', 'upcoming', 'ongoing', 'completed', 'cancelled'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all cursor-pointer ${
                 activeTab === tab
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-bold'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#1264F5] text-white shadow-sm'
+                  : 'text-[#64748B] hover:text-[#10213F]'
               }`}
             >
               {tab}
@@ -51,7 +51,7 @@ export const MyBookingsPage = () => {
 
       {/* Bookings List */}
       {filteredBookings.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredBookings.map((booking) => (
             <BookingCard
               key={booking.id}
@@ -70,117 +70,58 @@ export const MyBookingsPage = () => {
         />
       )}
 
-      {/* MODAL 31: BOOKING DETAILS & VISUAL TIMELINE */}
+      {/* MODAL: BOOKING DETAILS & VISUAL TIMELINE */}
       <Modal
         isOpen={!!selectedBookingDetails}
         onClose={() => setSelectedBookingDetails(null)}
-        title={`Booking #${selectedBookingDetails?.id}`}
+        title={`Booking #${selectedBookingDetails?.bookingNumber || selectedBookingDetails?.id}`}
         subtitle="Complete Doorstep Washing Information"
         maxWidth="max-w-xl"
       >
         {selectedBookingDetails && (
           <div className="space-y-5 text-xs">
-            <div className="flex items-center justify-between bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+            <div className="flex items-center justify-between bg-[#F8FAFC] p-4 rounded-2xl border border-[#E6ECF5]">
               <div>
-                <h3 className="text-base font-bold text-white">{selectedBookingDetails.service.name}</h3>
-                <span className="text-cyan-400 font-extrabold text-sm">₹{selectedBookingDetails.finalAmount} ({selectedBookingDetails.paymentMethod})</span>
+                <h3 className="text-base font-bold text-[#10213F]">{selectedBookingDetails.service?.name}</h3>
+                <span className="text-[#1264F5] font-black text-sm">₹{selectedBookingDetails.finalAmount} ({selectedBookingDetails.paymentMethod})</span>
               </div>
               <StatusBadge status={selectedBookingDetails.status} />
             </div>
 
-            {/* 31. VISUAL TIMELINE */}
-            <div className="bg-slate-900/70 p-4 rounded-2xl border border-slate-800">
-              <h4 className="font-bold text-slate-200 mb-3 uppercase tracking-wider text-[11px]">Service Progress Timeline</h4>
-              <div className="space-y-3 relative pl-4 border-l-2 border-slate-800">
+            {/* VISUAL TIMELINE */}
+            <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E6ECF5]">
+              <h4 className="font-bold text-[#10213F] mb-3 uppercase tracking-wider text-[11px]">Service Progress Timeline</h4>
+              <div className="space-y-3 relative pl-4 border-l-2 border-[#E6ECF5]">
                 <div className="relative">
-                  <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-4 ring-slate-900" />
-                  <p className="font-bold text-white">Booking Confirmed</p>
-                  <p className="text-slate-400 text-[10px]">{selectedBookingDetails.createdAt}</p>
+                  <span className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#16A34A] ring-4 ring-white" />
+                  <p className="font-bold text-[#10213F]">Booking Confirmed</p>
+                  <p className="text-[#64748B] text-[10px]">{selectedBookingDetails.createdAt}</p>
                 </div>
                 <div className="relative">
-                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-slate-900 ${selectedBookingDetails.progressStep >= 1 ? 'bg-emerald-400' : 'bg-slate-700'}`} />
-                  <p className="font-bold text-white">Professional Assigned</p>
-                  <p className="text-slate-400 text-[10px]">{selectedBookingDetails.employee?.name || 'Venkatesh Kumar'}</p>
+                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white ${selectedBookingDetails.progressStep >= 1 ? 'bg-[#16A34A]' : 'bg-[#CBD5E1]'}`} />
+                  <p className="font-bold text-[#10213F]">Technician Assigned</p>
+                  <p className="text-[#64748B] text-[10px]">Specialist assigned from Mysuru central hub</p>
                 </div>
                 <div className="relative">
-                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-slate-900 ${selectedBookingDetails.progressStep >= 2 ? 'bg-cyan-400 animate-pulse' : 'bg-slate-700'}`} />
-                  <p className="font-bold text-white">Professional On The Way</p>
-                  <p className="text-slate-400 text-[10px]">Mobile foam unit driving to doorstep</p>
+                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white ${selectedBookingDetails.progressStep >= 2 ? 'bg-[#16A34A]' : 'bg-[#CBD5E1]'}`} />
+                  <p className="font-bold text-[#10213F]">On The Way & Arrival</p>
+                  <p className="text-[#64748B] text-[10px]">Mobile pressure unit traveling to doorstep</p>
                 </div>
                 <div className="relative">
-                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-slate-900 ${selectedBookingDetails.progressStep >= 3 ? 'bg-emerald-400' : 'bg-slate-700'}`} />
-                  <p className="font-bold text-white">Service Started</p>
-                  <p className="text-slate-400 text-[10px]">High pressure foam wash & interior vacuum</p>
+                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white ${selectedBookingDetails.progressStep >= 3 ? 'bg-[#16A34A]' : 'bg-[#CBD5E1]'}`} />
+                  <p className="font-bold text-[#10213F]">Eco Foam Wash in Progress</p>
+                  <p className="text-[#64748B] text-[10px]">Pre-inspection, exterior pressure wash & interior detailing</p>
                 </div>
                 <div className="relative">
-                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-slate-900 ${selectedBookingDetails.progressStep >= 4 ? 'bg-emerald-400' : 'bg-slate-700'}`} />
-                  <p className="font-bold text-white">Service Completed</p>
-                  <p className="text-slate-400 text-[10px]">Customer inspected & rating submitted</p>
+                  <span className={`absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full ring-4 ring-white ${selectedBookingDetails.progressStep >= 4 ? 'bg-[#16A34A]' : 'bg-[#CBD5E1]'}`} />
+                  <p className="font-bold text-[#10213F]">Completed & Inspected</p>
+                  <p className="text-[#64748B] text-[10px]">Job completed with before/after photos verified</p>
                 </div>
               </div>
-            </div>
-
-            {/* Vehicle & Address info */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span className="text-[10px] text-slate-400 font-semibold uppercase block">Vehicle</span>
-                <p className="font-bold text-white mt-0.5">{selectedBookingDetails.vehicle.brand} {selectedBookingDetails.vehicle.model}</p>
-                <p className="text-[11px] text-cyan-400 font-mono">{selectedBookingDetails.vehicle.regNumber}</p>
-              </div>
-
-              <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span className="text-[10px] text-slate-400 font-semibold uppercase block">Location</span>
-                <p className="font-bold text-white mt-0.5">{selectedBookingDetails.address.area}</p>
-                <p className="text-[11px] text-slate-400 truncate">{selectedBookingDetails.address.city}</p>
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-3 pt-2">
-              {selectedBookingDetails.status === 'Ongoing' && (
-                <Button
-                  onClick={() => {
-                    const b = selectedBookingDetails;
-                    setSelectedBookingDetails(null);
-                    setTrackingBooking(b);
-                  }}
-                  variant="primary"
-                  fullWidth
-                  icon={Navigation}
-                >
-                  Track Live Map
-                </Button>
-              )}
-              {selectedBookingDetails.status === 'Upcoming' && (
-                <Button
-                  onClick={() => {
-                    updateBookingStatus(selectedBookingDetails.id, 'Cancelled');
-                    setSelectedBookingDetails(null);
-                  }}
-                  variant="danger"
-                  fullWidth
-                >
-                  Cancel Booking
-                </Button>
-              )}
             </div>
           </div>
         )}
       </Modal>
-
-      {/* Live Tracking Modal */}
-      <LiveTrackingModal
-        isOpen={!!trackingBooking}
-        onClose={() => setTrackingBooking(null)}
-        booking={trackingBooking}
-      />
-
-      {/* Review Modal */}
-      <ReviewModal
-        isOpen={!!ratingBooking}
-        onClose={() => setRatingBooking(null)}
-        booking={ratingBooking}
-      />
     </div>
   );
 };

@@ -37,33 +37,32 @@ export const EmployeeLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-slate-950 text-slate-100 relative overflow-hidden">
-      <div className="w-full max-w-md glass-panel border border-amber-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10">
-        <Link to="/login" className="flex items-center gap-1 text-xs text-slate-400 hover:text-white mb-4">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-[#F7F9FC] text-[#10213F] relative overflow-hidden">
+      <div className="w-full max-w-md bg-white border border-[#E6ECF5] rounded-3xl p-6 sm:p-8 shadow-xl relative z-10">
+        <Link to="/login" className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#10213F] font-bold mb-4">
           <ArrowLeft className="w-4 h-4" /> Customer Login
         </Link>
 
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-2xl flex items-center justify-center mb-3">
+          <div className="w-14 h-14 bg-[#F0F6FF] border border-[#BFDBFE] text-[#1264F5] rounded-2xl flex items-center justify-center mb-3">
             <Briefcase className="w-7 h-7" />
           </div>
-          <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20 mb-2">
-            Technician & Partner Portal
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[#1264F5] font-bold bg-[#F0F6FF] px-2.5 py-0.5 rounded-full border border-[#BFDBFE] mb-2">
+            Technician Portal
           </span>
-          <h2 className="text-2xl font-extrabold text-white">Employee Login</h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Access assigned doorstep jobs and upload before/after wash photos
+          <h2 className="text-2xl font-black text-[#10213F]">Employee Login</h2>
+          <p className="text-xs text-[#64748B] mt-1">
+            Access assigned doorstep jobs and update work progress
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Employee ID / Email"
+            label="Employee Email or ID"
             type="email"
-            placeholder="venky.wash@aquago.com"
+            placeholder="e.g. venky@aquago.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            icon={Briefcase}
             required
           />
 
@@ -83,12 +82,24 @@ export const EmployeeLogin = () => {
             size="lg"
             fullWidth
             isLoading={isLoading}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-bold shadow-lg shadow-amber-500/20"
+            icon={LogIn}
+            className="mt-2"
           >
-            Access Technician Portal
+            Sign In to Technician Portal
           </Button>
+
+          {/* Quick Demo Credentials */}
+          <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E6ECF5] text-[11px] text-[#64748B] space-y-1">
+            <span className="font-bold text-[#10213F] block">Quick Demo Credentials:</span>
+            <p>Email: <span className="font-mono text-[#1264F5]">venky@aquago.com</span></p>
+            <p>Password: <span className="font-mono text-[#1264F5]">employee123</span></p>
+          </div>
         </form>
       </div>
+
+      <p className="text-center text-xs text-[#94A3B8] mt-6">
+        © {new Date().getFullYear()} AquaGo Wash. All rights reserved.
+      </p>
     </div>
   );
 };

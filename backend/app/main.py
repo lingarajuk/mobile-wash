@@ -50,17 +50,20 @@ app.include_router(employees.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"])
+@app.get("/api/v1/health", tags=["Health"])
 def health_check():
     return {
         "status": "healthy",
         "project": settings.PROJECT_NAME,
-        "version": settings.VERSION
+        "version": settings.VERSION,
+        "database": "connected"
     }
 
 @app.get("/", tags=["Health"])
 def root_redirect():
     return {
-        "message": "Welcome to Mobile Water Wash API",
+        "message": "Welcome to AquaGo Mobile Water Wash API",
         "docs": "/docs",
         "version": settings.VERSION
     }

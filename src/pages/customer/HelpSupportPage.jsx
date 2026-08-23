@@ -42,83 +42,85 @@ export const HelpSupportPage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-16">
+    <div className="max-w-3xl mx-auto space-y-6 pb-16 animate-fadeIn">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Help & Customer Support</h1>
-        <p className="text-xs text-slate-400 mt-1">Need assistance with your vehicle wash? We are here 24/7.</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-[#10213F]">Help & Customer Support</h1>
+        <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">Need assistance with your vehicle wash? We are here 24/7.</p>
       </div>
 
       {/* Support Action Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <a
           href="tel:+91800278246"
-          className="glass-card p-4 rounded-2xl border border-slate-800 hover:border-cyan-500/40 text-center flex flex-col items-center justify-center gap-2 group transition-all"
+          className="bg-white p-4.5 rounded-2xl border border-[#E6ECF5] hover:border-[#BFDBFE] hover:shadow-sm text-center flex flex-col items-center justify-center gap-2 group transition-all"
         >
-          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
+          <div className="p-3 bg-[#F0F6FF] text-[#1264F5] rounded-xl group-hover:bg-[#1264F5] group-hover:text-white transition-colors">
             <Phone className="w-5 h-5" />
           </div>
-          <span className="text-xs font-bold text-white">Call Support</span>
-          <span className="text-[10px] text-slate-400">1800-AQUAGO</span>
+          <span className="text-xs font-bold text-[#10213F]">Call Support</span>
+          <span className="text-[10px] text-[#64748B]">1800-278-246</span>
         </a>
 
-        <button
-          onClick={() => alert('Starting live chat with AquaGo Customer Care agent...')}
-          className="glass-card p-4 rounded-2xl border border-slate-800 hover:border-cyan-500/40 text-center flex flex-col items-center justify-center gap-2 group transition-all"
-        >
-          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
-            <MessageSquare className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-white">Live Chat</span>
-          <span className="text-[10px] text-slate-400">Instant Reply</span>
-        </button>
-
         <a
-          href="mailto:support@aquago.com"
-          className="glass-card p-4 rounded-2xl border border-slate-800 hover:border-cyan-500/40 text-center flex flex-col items-center justify-center gap-2 group transition-all"
+          href="mailto:support@aquagowash.in"
+          className="bg-white p-4.5 rounded-2xl border border-[#E6ECF5] hover:border-[#BFDBFE] hover:shadow-sm text-center flex flex-col items-center justify-center gap-2 group transition-all"
         >
-          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-xl group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
+          <div className="p-3 bg-[#F0F6FF] text-[#1264F5] rounded-xl group-hover:bg-[#1264F5] group-hover:text-white transition-colors">
             <Mail className="w-5 h-5" />
           </div>
-          <span className="text-xs font-bold text-white">Email Us</span>
-          <span className="text-[10px] text-slate-400">support@aquago.com</span>
+          <span className="text-xs font-bold text-[#10213F]">Email Us</span>
+          <span className="text-[10px] text-[#64748B]">Quick reply &lt; 2h</span>
+        </a>
+
+        <a
+          href="https://wa.me/919876543210"
+          target="_blank"
+          rel="noreferrer"
+          className="bg-white p-4.5 rounded-2xl border border-[#E6ECF5] hover:border-[#BFDBFE] hover:shadow-sm text-center flex flex-col items-center justify-center gap-2 group transition-all"
+        >
+          <div className="p-3 bg-[#F0FDF4] text-[#16A34A] rounded-xl group-hover:bg-[#16A34A] group-hover:text-white transition-colors">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-[#10213F]">WhatsApp</span>
+          <span className="text-[10px] text-[#64748B]">Instant chat</span>
         </a>
 
         <button
           onClick={() => setShowReportModal(true)}
-          className="glass-card p-4 rounded-2xl border border-rose-500/30 hover:bg-rose-500/10 text-center flex flex-col items-center justify-center gap-2 group transition-all"
+          className="bg-white p-4.5 rounded-2xl border border-[#E6ECF5] hover:border-[#BFDBFE] hover:shadow-sm text-center flex flex-col items-center justify-center gap-2 group transition-all cursor-pointer"
         >
-          <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+          <div className="p-3 bg-[#FEF2F2] text-[#EF4444] rounded-xl group-hover:bg-[#EF4444] group-hover:text-white transition-colors">
             <AlertCircle className="w-5 h-5" />
           </div>
-          <span className="text-xs font-bold text-rose-300">Report Issue</span>
-          <span className="text-[10px] text-slate-400">Raise Ticket</span>
+          <span className="text-xs font-bold text-[#10213F]">Report Issue</span>
+          <span className="text-[10px] text-[#64748B]">Priority ticket</span>
         </button>
       </div>
 
-      {/* Expandable FAQs */}
-      <div className="glass-card p-6 rounded-3xl border border-slate-800 space-y-4">
-        <h3 className="text-base font-bold text-white flex items-center gap-2">
-          <HelpCircle className="w-5 h-5 text-cyan-400" /> Frequently Asked Questions
-        </h3>
+      {/* FAQ SECTION */}
+      <div className="bg-white rounded-3xl p-6 border border-[#E6ECF5] shadow-xs space-y-4">
+        <h2 className="text-base font-black text-[#10213F] flex items-center gap-2">
+          <HelpCircle className="w-4 h-4 text-[#1264F5]" /> Frequently Asked Questions
+        </h2>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {faqs.map((faq, idx) => {
-            const isExpanded = expandedFaq === idx;
+            const isExp = expandedFaq === idx;
             return (
               <div
                 key={idx}
-                className="border border-slate-800 rounded-2xl bg-slate-900/60 overflow-hidden transition-all"
+                className="border border-[#E6ECF5] rounded-2xl overflow-hidden bg-[#F8FAFC]"
               >
                 <button
-                  onClick={() => setExpandedFaq(isExpanded ? null : idx)}
-                  className="w-full p-4 text-left text-xs font-bold text-white flex items-center justify-between gap-3 hover:bg-slate-800/60 transition-colors"
+                  onClick={() => setExpandedFaq(isExp ? null : idx)}
+                  className="w-full p-4 text-left flex items-center justify-between gap-3 text-xs font-bold text-[#10213F] cursor-pointer hover:bg-white transition-colors"
                 >
                   <span>{faq.q}</span>
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-cyan-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />}
+                  {isExp ? <ChevronUp className="w-4 h-4 text-[#1264F5] shrink-0" /> : <ChevronDown className="w-4 h-4 text-[#94A3B8] shrink-0" />}
                 </button>
 
-                {isExpanded && (
-                  <div className="px-4 pb-4 text-xs text-slate-300 border-t border-slate-800/80 pt-3 leading-relaxed">
+                {isExp && (
+                  <div className="px-4 pb-4 pt-1 text-xs text-[#64748B] leading-relaxed border-t border-[#E6ECF5] bg-white">
                     {faq.a}
                   </div>
                 )}
@@ -128,21 +130,34 @@ export const HelpSupportPage = () => {
         </div>
       </div>
 
-      {/* Report Problem Modal */}
-      <Modal isOpen={showReportModal} onClose={() => setShowReportModal(false)} title="Report a Problem">
-        <form onSubmit={handleReportSubmit} className="space-y-4">
-          <label className="text-xs font-semibold text-slate-300 block">Describe the issue</label>
-          <textarea
-            value={reportIssue}
-            onChange={(e) => setReportIssue(e.target.value)}
-            rows={4}
-            placeholder="Tell us what went wrong e.g. technician delayed, wash quality issue..."
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-cyan-500"
-            required
-          />
-          <div className="flex gap-2">
-            <Button onClick={() => setShowReportModal(false)} variant="secondary" fullWidth type="button">Cancel</Button>
-            <Button variant="danger" fullWidth type="submit">Submit Ticket</Button>
+      {/* REPORT ISSUE MODAL */}
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title="Report Service Issue"
+        subtitle="Our supervisor will review and respond immediately"
+        maxWidth="max-w-md"
+      >
+        <form onSubmit={handleReportSubmit} className="space-y-4 text-xs">
+          <div>
+            <label className="text-xs font-bold text-[#10213F] block mb-1">Describe Your Issue</label>
+            <textarea
+              rows={4}
+              placeholder="e.g. Technician arrived 15 mins late, or water spots on side mirrors..."
+              value={reportIssue}
+              onChange={(e) => setReportIssue(e.target.value)}
+              className="w-full bg-[#F8FAFC] border border-[#E6ECF5] text-xs text-[#10213F] rounded-2xl p-3 outline-none focus:border-[#1264F5] placeholder:text-[#94A3B8]"
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setShowReportModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              Submit Ticket
+            </Button>
           </div>
         </form>
       </Modal>

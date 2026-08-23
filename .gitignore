@@ -51,6 +51,9 @@ venv.bak/
 *.sqlite3
 *.db
 backend/*.db
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/backend/
 .pytest_cache/
 .coverage
 htmlcov/
@@ -65,4 +68,3 @@ htmlcov/
 *.njsproj
 *.sln
 *.sw?
-

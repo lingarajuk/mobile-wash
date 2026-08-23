@@ -43,13 +43,13 @@ export const ReviewModal = ({ isOpen, onClose, booking, onSubmitReview }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="Rate Your Vehicle Wash"
-      subtitle={`Booking #${booking.id} • ${booking.service.name}`}
+      subtitle={`Booking #${booking.bookingNumber || booking.id} • ${booking.service?.name}`}
       maxWidth="max-w-md"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Star Selection */}
-        <div className="flex flex-col items-center justify-center p-4 bg-slate-900/90 rounded-2xl border border-slate-800">
-          <span className="text-xs text-slate-400 mb-2 font-medium">Tap to rate experience</span>
+        <div className="flex flex-col items-center justify-center p-4 bg-[#F8FAFC] rounded-2xl border border-[#E6ECF5]">
+          <span className="text-xs text-[#64748B] mb-2 font-bold">Tap to rate experience</span>
           <div className="flex items-center gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -58,70 +58,69 @@ export const ReviewModal = ({ isOpen, onClose, booking, onSubmitReview }) => {
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
                 onClick={() => setRating(star)}
-                className="p-1 transition-transform transform hover:scale-125 focus:outline-none"
+                className="p-1 focus:outline-none transition-transform hover:scale-110 cursor-pointer"
               >
                 <Star
-                  className={`w-8 h-8 ${
-                    star <= (hoverRating || rating)
-                      ? 'text-amber-400 fill-amber-400'
-                      : 'text-slate-700 fill-slate-800'
+                  className={`w-7 h-7 ${
+                    (hoverRating || rating) >= star
+                      ? 'text-[#F59E0B] fill-[#F59E0B]'
+                      : 'text-[#CBD5E1]'
                   }`}
                 />
               </button>
             ))}
           </div>
-          <span className="text-xs font-bold text-amber-400 mt-2">
-            {rating === 5 ? 'Awesome! 🌟🌟🌟🌟🌟' : rating === 4 ? 'Great Service 👍' : rating === 3 ? 'Average' : 'Could be better'}
+          <span className="text-xs font-black text-[#10213F] mt-2">
+            {rating === 5 ? '⭐ Outstanding!' : rating === 4 ? 'Very Good' : rating === 3 ? 'Average' : 'Needs Improvement'}
           </span>
         </div>
 
-        {/* Written Feedback */}
+        {/* Written Review */}
         <div>
-          <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-            Share your feedback
+          <label className="text-xs font-bold text-[#10213F] block mb-1.5">
+            Your Feedback & Suggestions
           </label>
           <textarea
+            rows={3}
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
-            rows={3}
-            placeholder="Tell us how clean your vehicle is or rate technician behavior..."
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20"
+            placeholder="How was the shine, technician punctuality, and door cleaning quality?"
+            className="w-full bg-[#F8FAFC] border border-[#E6ECF5] text-xs text-[#10213F] rounded-2xl p-3 outline-none focus:border-[#1264F5] focus:bg-white placeholder:text-[#94A3B8]"
           />
         </div>
 
-        {/* Photo Upload UI */}
+        {/* Photo Upload */}
         <div>
-          <label className="text-xs font-semibold text-slate-300 block mb-1.5">
-            Add Clean Vehicle Photos (Optional)
+          <label className="text-xs font-bold text-[#10213F] block mb-1.5">
+            Attach Clean Car Photos (Optional)
           </label>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {photos.map((src, i) => (
-              <div key={i} className="relative w-16 h-16 rounded-xl border border-slate-700 overflow-hidden shrink-0 group">
-                <img src={src} alt="Clean car" className="w-full h-full object-cover" />
+          <div className="flex flex-wrap gap-2">
+            {photos.map((url, i) => (
+              <div key={i} className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#E6ECF5]">
+                <img src={url} alt="Review" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removePhoto(i)}
-                  className="absolute top-0.5 right-0.5 bg-slate-950/80 text-rose-400 p-0.5 rounded-full"
+                  className="absolute top-1 right-1 p-0.5 bg-[#EF4444] text-white rounded-full cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
             ))}
-
-            <label className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-700 hover:border-cyan-500/50 bg-slate-900/60 flex flex-col items-center justify-center text-slate-400 hover:text-cyan-400 cursor-pointer transition-colors shrink-0">
-              <Camera className="w-5 h-5 mb-0.5" />
-              <span className="text-[9px]">Upload</span>
-              <input type="file" accept="image/*" multiple onChange={handlePhotoUpload} className="hidden" />
+            <label className="w-16 h-16 rounded-xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] hover:bg-white hover:border-[#1264F5] flex flex-col items-center justify-center text-[#64748B] hover:text-[#1264F5] cursor-pointer transition-colors">
+              <Camera className="w-4 h-4 mb-0.5" />
+              <span className="text-[9px] font-bold">+ Photo</span>
+              <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
             </label>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 pt-2">
-          <Button onClick={onClose} variant="secondary" fullWidth type="button">
+        <div className="flex justify-end gap-2 pt-2 border-t border-[#E6ECF5]">
+          <Button type="button" variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" fullWidth type="submit" isLoading={isSubmitting}>
+          <Button type="submit" variant="primary" isLoading={isSubmitting}>
             Submit Review
           </Button>
         </div>

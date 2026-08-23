@@ -22,6 +22,9 @@ class Employee(Base):
     total_earnings: Mapped[float] = mapped_column(Numeric(10, 2), default=0.00, nullable=False)
     status: Mapped[EmployeeStatus] = mapped_column(SQLEnum(EmployeeStatus), default=EmployeeStatus.AVAILABLE, nullable=False)
     current_location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    skills: Mapped[str | None] = mapped_column(String(255), default="Pressure Foam Wash, Interior Detailing, Paint Protection, Wheel Care", nullable=True)
+    experience: Mapped[str | None] = mapped_column(String(50), default="3.5 Years", nullable=True)
+    bio: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="employee_profile")

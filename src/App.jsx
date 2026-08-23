@@ -22,7 +22,9 @@ import { CustomerHome } from './pages/customer/CustomerHome';
 import { ServicesPage } from './pages/customer/ServicesPage';
 import { ServiceDetailPage } from './pages/customer/ServiceDetailPage';
 import { BookingFlowPage } from './pages/customer/BookingFlowPage';
+import { BookingSuccessPage } from './pages/customer/BookingSuccessPage';
 import { MyBookingsPage } from './pages/customer/MyBookingsPage';
+import { CustomerBookingTrackingPage } from './pages/customer/CustomerBookingTrackingPage';
 import { OffersPage } from './pages/customer/OffersPage';
 import { ProfilePage } from './pages/customer/ProfilePage';
 import { MyVehiclesPage } from './pages/customer/MyVehiclesPage';
@@ -35,10 +37,12 @@ import { NotificationsPage } from './pages/customer/NotificationsPage';
 // Employee Pages
 import { EmployeeDashboard } from './pages/employee/EmployeeDashboard';
 import { EmployeeProfile } from './pages/employee/EmployeeProfile';
+import { EmployeeJobDetailPage } from './pages/employee/EmployeeJobDetailPage';
 
 // Admin Pages
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminBookingsPage } from './pages/admin/AdminBookingsPage';
+import { AdminBookingDetailPage } from './pages/admin/AdminBookingDetailPage';
 import { AdminCustomersPage } from './pages/admin/AdminCustomersPage';
 import { AdminEmployeesPage } from './pages/admin/AdminEmployeesPage';
 import { AdminServicesPage } from './pages/admin/AdminServicesPage';
@@ -46,6 +50,8 @@ import { AdminOffersPage } from './pages/admin/AdminOffersPage';
 import { AdminPaymentsPage } from './pages/admin/AdminPaymentsPage';
 import { AdminReportsPage } from './pages/admin/AdminReportsPage';
 import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+
+import { Footer } from './components/common/Footer';
 
 function AppContent() {
   const { showSplash, setShowSplash, showOnboarding, setShowOnboarding } = useAuth();
@@ -70,10 +76,10 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950 font-sans">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FC] text-[#10213F] selection:bg-[#BFDBFE] selection:text-[#10213F] font-sans antialiased">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Routes>
           {/* Public Auth Routes */}
           <Route path="/login" element={<CustomerLogin />} />
@@ -87,8 +93,15 @@ function AppContent() {
           <Route path="/" element={<CustomerHome />} />
           <Route path="/services" element={<ServicesPage />} />
           <Route path="/service/:id" element={<ServiceDetailPage />} />
+          <Route path="/booking/:serviceId" element={<BookingFlowPage />} />
+          <Route path="/booking" element={<BookingFlowPage />} />
+          <Route path="/book/:serviceId" element={<BookingFlowPage />} />
           <Route path="/book" element={<BookingFlowPage />} />
+          <Route path="/booking/success/:bookingId" element={<BookingSuccessPage />} />
+          <Route path="/booking/success" element={<BookingSuccessPage />} />
           <Route path="/bookings" element={<MyBookingsPage />} />
+          <Route path="/my-bookings/:bookingId" element={<CustomerBookingTrackingPage />} />
+          <Route path="/bookings/:bookingId" element={<CustomerBookingTrackingPage />} />
           <Route path="/offers" element={<OffersPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/my-vehicles" element={<MyVehiclesPage />} />
@@ -101,6 +114,9 @@ function AppContent() {
           {/* Protected Employee Routes */}
           <Route element={<ProtectedRoute allowedRoles={['employee', 'admin']} />}>
             <Route path="/employee" element={<EmployeeDashboard />} />
+            <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+            <Route path="/employee/jobs" element={<EmployeeDashboard />} />
+            <Route path="/employee/jobs/:bookingId" element={<EmployeeJobDetailPage />} />
             <Route path="/employee/profile" element={<EmployeeProfile />} />
           </Route>
 
@@ -108,6 +124,7 @@ function AppContent() {
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/bookings" element={<AdminBookingsPage />} />
+            <Route path="/admin/bookings/:bookingId" element={<AdminBookingDetailPage />} />
             <Route path="/admin/customers" element={<AdminCustomersPage />} />
             <Route path="/admin/employees" element={<AdminEmployeesPage />} />
             <Route path="/admin/services" element={<AdminServicesPage />} />
@@ -122,6 +139,7 @@ function AppContent() {
         </Routes>
       </main>
 
+      <Footer />
       <BottomNavigation />
       <ToastContainer />
     </div>
