@@ -1,107 +1,107 @@
 # AquaGo Wash - Multi-Portal Doorstep Vehicle Care Platform
 
-AquaGo Wash is an enterprise-grade mobile doorstep vehicle washing and detailing platform built with **three separated frontend web applications**, **one shared FastAPI backend API**, and **one shared MySQL database**.
+AquaGo Wash is an enterprise-grade mobile doorstep vehicle washing and detailing platform built with **Customer & Worker React Native Mobile Applications**, **three dedicated Web Applications (Customer, Worker, Admin)**, **one shared FastAPI Backend API**, and **one shared MySQL Database**.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Target Architecture
 
 ```text
-AquaGo Wash
+AquaGo Wash Platform
 │
-├── Customer Web App (Port 5173)    -> http://localhost:5173
+├── Customer Mobile App (React Native / Expo) -> npm run dev:customer-mobile
 │
-├── Worker Web App (Port 5174)      -> http://localhost:5174
+├── Worker Mobile App (React Native / Expo)   -> npm run dev:worker-mobile
 │
-├── Admin Web App (Port 5175)       -> http://localhost:5175
+├── Customer Web App (Vite React - Port 5173) -> http://localhost:5173
 │
-└── Shared FastAPI Backend (Port 5000) -> http://localhost:5000
+├── Worker Web App (Vite React - Port 5174)   -> http://localhost:5174
+│
+├── Admin Web Dashboard (Port 5175)           -> http://localhost:5175
+│
+└── Shared FastAPI Backend API (Port 5000)    -> http://localhost:5000
     │
-    └── MySQL Database (Port 3306)  -> Persistent Named Volume (mysql_data)
+    └── Shared MySQL Database (Port 3306)     -> Real-time single source of truth
 ```
 
 ---
 
-## 🐳 Docker Deployment & Quick Start
+## 📱 Mobile Applications (React Native + Expo)
 
-### 1. Start all 5 containers with Docker Compose
-```bash
-docker compose up --build -d
-```
+### 1. Customer Mobile App (`apps/customer-mobile/`)
+- **App Name**: AquaGo Wash (`com.aquago.wash`)
+- **Bottom Navigation**: Home, Services, Bookings, Notifications, Profile
+- **Features**:
+  - Greeting banner & location selector (*"Good Morning, Rahul 👋 • Mysuru"*)
+  - 8-Step booking flow (Service -> Vehicle -> Photos -> Location -> Schedule -> Addons -> Review -> Payment)
+  - Vehicle inspection photo capture (Front, Back, Left, Right)
+  - My Bookings with Upcoming, Active, and Completed tabs
+  - Real-time GPS technician tracking when en route
+  - Post-service rating and review submission
+- **Run Command**:
+  ```bash
+  npm run dev:customer-mobile
+  ```
 
-### 2. View running containers
-```bash
-docker compose ps
-```
+### 2. Worker Mobile App (`apps/worker-mobile/`)
+- **App Name**: AquaGo Worker (`com.aquago.worker`)
+- **Bottom Navigation**: Dashboard, Jobs, History, Profile
+- **Features**:
+  - Live technician KPI dashboard (Today's jobs, Active, Upcoming, Completed)
+  - Full job action lifecycle buttons:
+    - `[Accept Job]` -> when Assigned
+    - `[Start Travel]` -> when Accepted (broadcasts live GPS coordinates)
+    - `[I've Arrived]` -> when On The Way
+    - `[Start Wash Service]` -> when Arrived
+    - `[Post Live Work Update]` -> records real-time updates for customer and admin
+    - `[Take Before / After Photos]` -> saves camera pictures against booking
+    - `[Complete Wash Service]` -> finalizes job and records timestamp
+  - `[Navigate to Customer]` -> Opens Google Maps navigation with customer coordinates
+- **Run Command**:
+  ```bash
+  npm run dev:worker-mobile
+  ```
 
-### 3. View live logs
-```bash
-docker compose logs -f
-```
+---
 
-### 4. Stop all containers (keeps MySQL data volume safe)
+## 🤖 Android Testing Guide (Expo Go)
+
+1. Install the **Expo Go** app on your Android phone from the Google Play Store.
+2. Ensure your phone and computer are connected to the same Wi-Fi network.
+3. Start the mobile app:
+   ```bash
+   npm run dev:customer-mobile
+   # OR
+   npm run dev:worker-mobile
+   ```
+4. Scan the QR code displayed in your terminal using the Expo Go app.
+
+### Required Android Permissions
+- `CAMERA`: Capture before/after wash verification photos.
+- `READ_EXTERNAL_STORAGE` / `WRITE_EXTERNAL_STORAGE`: Select photos from gallery.
+- `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION`: Doorstep address selection and live technician GPS broadcasting.
+
+---
+
+## 🌐 Web Portals & Quick Commands
+
+| Portal / App | Command | URL | Default Demo Credentials |
+|---|---|---|---|
+| **Customer Mobile** | `npm run dev:customer-mobile` | Expo QR Code | `rahul.sharma@example.com` / `customer123` |
+| **Worker Mobile** | `npm run dev:worker-mobile` | Expo QR Code | `venky@aquago.com` / `employee123` |
+| **Customer Web** | `npm run dev:customer` | [http://localhost:5173](http://localhost:5173) | `rahul.sharma@example.com` / `customer123` |
+| **Worker Web** | `npm run dev:worker` | [http://localhost:5174](http://localhost:5174) | `venky@aquago.com` / `employee123` |
+| **Admin Web** | `npm run dev:admin` | [http://localhost:5175](http://localhost:5175) | `admin@aquago.com` / `admin123` |
+| **FastAPI Backend** | `npm run dev:backend` | [http://localhost:5000/docs](http://localhost:5000/docs) | — |
+
+---
+
+## 🐳 Docker Deployment
+
 ```bash
+# Start all containers in background
+docker compose up -d
+
+# Stop all containers (keeps MySQL data intact)
 docker compose down
-```
-
-### 5. Rebuild from scratch
-```bash
-docker compose build --no-cache
-```
-
----
-
-## 🌐 Application URLs & Credentials
-
-| Service | Port | Local URL | Role / Purpose | Default Demo Credentials |
-|---|---|---|---|---|
-| **Customer Web App** | `5173` | [http://localhost:5173](http://localhost:5173) | Book doorstep wash, upload vehicle photos, track worker live | `rahul.sharma@example.com` / `customer123` |
-| **Worker Web App** | `5174` | [http://localhost:5174](http://localhost:5174) | View assigned jobs, accept bookings, share GPS, upload wash photos | `venky@aquago.com` / `employee123` |
-| **Admin Web App** | `5175` | [http://localhost:5175](http://localhost:5175) | Manage bookings, dispatch technicians, analytics & revenue reports | `admin@aquago.com` / `admin123` |
-| **Shared Backend API** | `5000` | [http://localhost:5000/docs](http://localhost:5000/docs) | FastAPI REST API documentation (Swagger UI) | — |
-| **MySQL Database** | `3306` | `localhost:3306` | Shared MySQL 8.0 Database (`mobile_wash`) | User: `root` / Pass: `root` |
-
----
-
-## 💻 Local Development (Without Docker)
-
-### Run all 3 Frontends locally
-```bash
-# Customer App (Port 5173)
-npm run dev:customer
-
-# Worker App (Port 5174)
-npm run dev:worker
-
-# Admin App (Port 5175)
-npm run dev:admin
-```
-
-### Run FastAPI Backend locally
-```bash
-cd backend
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
-
----
-
-## ⚙️ Environment Variables
-
-Copy `.env.example` to `.env` to configure custom database or port settings:
-
-```env
-# Database Settings
-DB_HOST=mysql
-DB_PORT=3306
-DB_NAME=mobile_wash
-DB_USER=root
-DB_PASSWORD=root
-
-# Backend Configuration
-BACKEND_PORT=5000
-JWT_SECRET=aquago_super_secret_jwt_key_2026_change_in_production
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
-
-# Frontend API Configuration
-VITE_API_URL=http://localhost:5000/api/v1
 ```

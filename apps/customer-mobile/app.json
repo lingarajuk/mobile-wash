@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "AquaGo Wash",
+    "slug": "aquago-wash",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#10213F"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aquago.wash"
+    },
+    "android": {
+      "package": "com.aquago.wash",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#10213F"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow AquaGo Wash to use your location to dispatch nearby mobile wash vans to your doorstep."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow AquaGo Wash to access your photos to attach vehicle inspection pictures."
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "http://10.0.2.2:5000/api/v1",
+      "localApiUrl": "http://127.0.0.1:5000/api/v1"
+    }
+  }
+}
