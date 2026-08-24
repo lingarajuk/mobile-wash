@@ -32,10 +32,11 @@ services:
         value: rzp_secret_mocksecret456
 
   # 2. Customer Web App (Static Site)
-  - type: static
+  - type: web
     name: aquago-customer
-    buildCommand: npm run build:customer
-    publishPath: dist/customer
+    runtime: static
+    buildCommand: npm install && npm run build:customer
+    staticPublishPath: ./dist/customer
     routes:
       - type: rewrite
         source: /*
@@ -45,10 +46,11 @@ services:
         sync: false
 
   # 3. Worker Web App (Static Site)
-  - type: static
+  - type: web
     name: aquago-worker
-    buildCommand: npm run build:worker
-    publishPath: dist/worker
+    runtime: static
+    buildCommand: npm install && npm run build:worker
+    staticPublishPath: ./dist/worker
     routes:
       - type: rewrite
         source: /*
@@ -58,10 +60,11 @@ services:
         sync: false
 
   # 4. Admin Web App (Static Site)
-  - type: static
+  - type: web
     name: aquago-admin
-    buildCommand: npm run build:admin
-    publishPath: dist/admin
+    runtime: static
+    buildCommand: npm install && npm run build:admin
+    staticPublishPath: ./dist/admin
     routes:
       - type: rewrite
         source: /*
