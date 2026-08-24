@@ -51,7 +51,7 @@ services:
     networks:
       - aquago_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
       interval: 8s
       timeout: 5s
       retries: 5

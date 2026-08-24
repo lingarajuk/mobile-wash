@@ -96,6 +96,22 @@ AquaGo Wash Platform
 
 ---
 
+## 🚀 Render Production Deployment
+
+The AquaGo Wash monorepo is fully configured for zero-downtime deployment on **Render**:
+
+- **Blueprint File**: `render.yaml` (Deploys Backend Web Service + 3 Static Sites)
+- **Full Guide**: See [RENDER_DEPLOYMENT.md](file:///RENDER_DEPLOYMENT.md)
+
+### Deployment Summary
+- **Backend API**: Render Web Service (`cd backend && pip install -r requirements.txt`, start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, health check: `/api/health`).
+- **Customer Web App**: Render / Netlify Static Site (build: `npm run build:customer`, publish: `dist/customer`).
+- **Worker Web App**: Render / Netlify Static Site (build: `npm run build:worker`, publish: `dist/worker`).
+- **Admin Web App**: Render / Netlify Static Site (build: `npm run build:admin`, publish: `dist/admin`).
+- **Database**: Render MySQL or external Managed MySQL with auto-migration and auto-seeding.
+
+---
+
 ## 🐳 Docker Deployment
 
 ```bash
@@ -105,3 +121,4 @@ docker compose up -d
 # Stop all containers (keeps MySQL data intact)
 docker compose down
 ```
+

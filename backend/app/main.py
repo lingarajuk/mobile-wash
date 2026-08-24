@@ -28,7 +28,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.railway\.app|https://.*\.aquago\.in",
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.railway\.app|https://.*\.onrender\.com|https://.*\.netlify\.app|https://.*\.aquago\.in",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,10 +55,7 @@ app.include_router(admin.router, prefix=settings.API_V1_STR)
 @app.get("/api/v1/health", tags=["Health"])
 def health_check():
     return {
-        "status": "healthy",
-        "project": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "database": "connected"
+        "status": "ok"
     }
 
 @app.get("/", tags=["Health"])

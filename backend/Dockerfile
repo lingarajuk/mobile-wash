@@ -21,6 +21,6 @@ ENV PORT=5000
 EXPOSE 5000
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=5 --start-period=10s \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD curl -f http://localhost:${PORT}/api/health || exit 1
 
 CMD ["sh", "-c", "python seed.py && python migrate_db.py && python migrate_db_v2.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-5000}"]

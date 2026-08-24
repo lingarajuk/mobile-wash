@@ -1,0 +1,71 @@
+# AquaGo Wash - Render Blueprint Specification
+# Infrastructure as Code for Render Web Services and Static Sites
+
+services:
+  # 1. Backend Web Service (FastAPI)
+  - type: web
+    name: aquago-backend
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && python seed.py && python migrate_db.py && python migrate_db_v2.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 1440
+      - key: CORS_ORIGINS
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_mockkey123
+      - key: RAZORPAY_KEY_SECRET
+        value: rzp_secret_mocksecret456
+
+  # 2. Customer Web App (Static Site)
+  - type: static
+    name: aquago-customer
+    buildCommand: npm run build:customer
+    publishPath: dist/customer
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+  # 3. Worker Web App (Static Site)
+  - type: static
+    name: aquago-worker
+    buildCommand: npm run build:worker
+    publishPath: dist/worker
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+  # 4. Admin Web App (Static Site)
+  - type: static
+    name: aquago-admin
+    buildCommand: npm run build:admin
+    publishPath: dist/admin
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
